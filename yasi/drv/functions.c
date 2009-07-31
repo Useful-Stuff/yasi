@@ -116,6 +116,7 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     ULONG				ioControlCode;
     UCHAR				*InputBuffer, *OutputBuffer;
 	ULONG				index = 0;
+	ULONG				processID = 0;
 	struct CMD_RECORD	*cmd;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
     inBufLength = irpStack->Parameters.DeviceIoControl.InputBufferLength;
@@ -141,6 +142,16 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		        Irp->IoStatus.Information = outBufLength;
 				DbgPrint("[ring0] output length %d", outBufLength);
 				EnumProcessList(index, (struct PROCESS_RECORD *) OutputBuffer);
+				break;
+			case CMD_GET_PROCESS_DETAIL:
+				processID = *((ULONG*)&cmd->param[0]); 
+				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
+		        memset(OutputBuffer, 0, outBufLength);
+		        Irp->IoStatus.Information = outBufLength;
+				DbgPrint("[ring0] output length %d", outBufLength);
+				GetProcessDetail(processID, (struct PROCESS_DETAIL *) OutputBuffer);
+				break;
+			case CMD_KILL_PROCESS:
 				break;
 			default:
 				Status = STATUS_ACCESS_DENIED;

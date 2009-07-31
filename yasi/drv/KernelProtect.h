@@ -5,19 +5,26 @@
 #ifndef __EXAMPLE_H__
 #define __EXAMPLE_H__
 
-#define RING_IOCTL_INDEX             0x0C00                                                 
-#define IOCTL_CMD_READ                CTL_CODE(FILE_DEVICE_UNKNOWN,     \
-                                                     RING_IOCTL_INDEX, \
-                                                     METHOD_BUFFERED,         \
-                                                     FILE_ANY_ACCESS)
 
 typedef unsigned int UINT;
 typedef char * PCHAR;
 typedef unsigned long ULONG;
 typedef char UCHAR;
 typedef unsigned int BOOL;
+typedef void * PVOID;
+typedef unsigned short WORD;
 #define TRUE (1==1)
 #define FALSE (1==0)
+
+#include "../internal.h"
+
+#define RING_IOCTL_INDEX             0x0C00                                                 
+#define IOCTL_CMD_READ                CTL_CODE(FILE_DEVICE_UNKNOWN,     \
+                                                     RING_IOCTL_INDEX, \
+                                                     METHOD_BUFFERED,         \
+                                                     FILE_ANY_ACCESS)
+
+
 
 struct CMD_RECORD
 {
@@ -29,7 +36,10 @@ struct CMD_RECORD
 enum
 {
 	CMD_GET_PROCESS_COUNT,
-	CMD_GET_PROCESS_BY_INDEX
+	CMD_GET_PROCESS_BY_INDEX,
+	CMD_GET_PROCESS_DETAIL,
+	CMD_KILL_PROCESS
+
 };
 
 struct PROCESS_RECORD
@@ -37,7 +47,12 @@ struct PROCESS_RECORD
 	ULONG processID;
 	UCHAR imageName[16];
 };
-#define MAX_PROCESS_RECORD_NUM 50
+
+struct PROCESS_DETAIL
+{
+	WCHAR fullName[128];
+	EPROCESS_XP_SP3 process;
+};
 
 NTSTATUS KernelProtect_Create(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS KernelProtect_Close(PDEVICE_OBJECT DeviceObject, PIRP Irp);
@@ -50,6 +65,8 @@ NTSTATUS KernelProtect_UnSupportedFunction(PDEVICE_OBJECT DeviceObject, PIRP Irp
 
 void EnumProcessList(ULONG index, struct PROCESS_RECORD* processes);
 ULONG GetProcessCount();
+void GetProcessDetail(ULONG id, struct PROCESS_DETAIL* detail);
+void KillProcess(ULONG id);
 
 enum
 {

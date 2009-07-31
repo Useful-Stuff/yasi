@@ -116,26 +116,61 @@ void EnumProcessList(ULONG index, struct PROCESS_RECORD* processes)
 		processes->processID = *((ULONG *)(EProcess + dwPIdOffset));
         memcpy(processes->imageName, (PUCHAR)(EProcess + dwPNameOffset), 16);
 	}
+}
 
-/*
+BOOL FindProcessByID(ULONG id, ULONG* pProcess)
+{
+	ULONG			tmpID;
+    ULONG            EProcess;
+    ULONG            FirstProcess;
+    ULONG            dwCount = 0;
+    LIST_ENTRY*        ActiveProcessLinks;
+
+    ULONG    dwPIdOffset = GetPlantformDependentInfo(PROCESS_ID_OFFSET);
+    ULONG    dwPNameOffset = GetPlantformDependentInfo(FILE_NAME_OFFSET);
+    ULONG    dwPLinkOffset = GetPlantformDependentInfo(PROCESS_LINK_OFFSET);
+   
+    FirstProcess = EProcess = (ULONG)PsGetCurrentProcess();
     do
     {
-
-        processes->processID = *((ULONG *)(EProcess + dwPIdOffset));
-        memcpy(processes->imageName, (PUCHAR)(EProcess + dwPNameOffset), 16);
+    	tmpID = *((ULONG *)(EProcess + dwPIdOffset));
+		if( id == tmpID ){
+			*pProcess = EProcess;
+			return TRUE;
+		}
         dwCount++;
-
-		
-
         ActiveProcessLinks = (LIST_ENTRY *)(EProcess + dwPLinkOffset);
         EProcess = (ULONG)ActiveProcessLinks->Flink - dwPLinkOffset;
-
-		ProcessCount++;
-
         if (EProcess == FirstProcess)
         {
             break;
         }
-    }while (EProcess != 0 && dwCount <= index);
-*/
+    }while (EProcess != 0);
+
+    return FALSE;
+}
+
+void GetProcessDetail(ULONG id, struct PROCESS_DETAIL* detail)
+{
+	BOOL 			found;
+	ULONG           EProcess;
+	PEPROCESS_XP_SP3	EProcess_sp3;
+	UNICODE_STRING*		fullName;
+	UINT			nameLen;
+	if( !detail ) return;
+	EProcess = 0;
+	found = FALSE;
+	found = FindProcessByID(id, &EProcess);
+	if( found ){
+		DbgPrint("[ring0] found process");
+		EProcess_sp3 = (PEPROCESS_XP_SP3)EProcess;
+		memcpy(&(detail->process), EProcess_sp3, sizeof(EPROCESS_XP_SP3));
+		fullName = (struct UNICODE_STRING*)EProcess_sp3->SeAuditProcessCreationInfo;
+		if( fullName->Length > 127 )
+			nameLen = 127;
+		else
+			nameLen = fullName->Length;
+		memcpy(&(detail->fullName[0]), fullName->Buffer, nameLen);
+	}
+	
 }
