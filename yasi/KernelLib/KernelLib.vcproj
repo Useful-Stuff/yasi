@@ -203,6 +203,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\util.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\yasi.cpp"
 				>
 			</File>
@@ -222,6 +226,10 @@
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\util.h"
 				>
 			</File>
 			<File

@@ -12,7 +12,7 @@ typedef void* YASI_HANDLE;
 										RING_IOCTL_INDEX,				\
 										METHOD_BUFFERED,				\
 										FILE_ANY_ACCESS)
-
+#define MAX_ACCEPT_STRING_LEN 128
 
 struct CMD_RECORD
 {
@@ -24,7 +24,20 @@ struct CMD_RECORD
 enum
 {
 	CMD_GET_PROCESS_COUNT,
-	CMD_GET_PROCESS_BY_INDEX,	CMD_GET_PROCESS_DETAIL,	CMD_KILL_PROCESS
+	CMD_GET_PROCESS_BY_INDEX,	CMD_GET_PROCESS_DETAIL,	CMD_KILL_PROCESS,	CMD_GET_PROCESS_STRING
+};
+
+enum
+{
+	STRING_CSDVersion,
+	STRING_DllPath,
+	STRING_ImagePathName,
+	STRING_CommandLine,
+	STRING_WindowTitle,
+	STRING_DesktopInfo,
+	STRING_ShellInfo,
+	STRING_RuntimeData,
+	STRING_CurrentDirectore
 };
 
 struct PROCESS_RECORD
@@ -35,7 +48,7 @@ struct PROCESS_RECORD
 
 struct PROCESS_DETAIL
 {
-	WCHAR fullName[128];
+	WCHAR fullName[MAX_ACCEPT_STRING_LEN];
 #ifdef XP_SP3
 	EPROCESS_XP_SP3 process;
 #else
@@ -54,3 +67,22 @@ DllExport void yasi_get_process(YASI_HANDLE h, ULONG index, struct PROCESS_RECOR
 DllExport void yasi_get_process_detail(YASI_HANDLE h, ULONG processID, PROCESS_DETAIL* detail);
 
 DllExport void yasi_kill_process(YASI_HANDLE h, ULONG processID);
+
+DllExport ULONG yasi_get_peb_address(YASI_HANDLE h, ULONG processID);
+
+DllExport ULONG yasi_get_base_address(YASI_HANDLE h, ULONG processID);
+
+DllExport void yasi_get_process_info(YASI_HANDLE h, ULONG processID, UINT which, wchar_t* str);
+
+DllExport void yasi_get_process_string(YASI_HANDLE h, ULONG processID, PVOID addr, wchar_t* str, ULONG bufferLen);
+
+DllExport ULONG yasi_get_module_count(YASI_HANDLE h, ULONG processID);
+
+DllExport void yasi_get_module_info(YASI_HANDLE h, ULONG processID, ULONG index, LDR_DATA_TABLE_ENTRY_XP_SP3* info);
+
+DllExport FARPROC yasi_get_proc_address(YASI_HANDLE h, ULONG processID, char* dllName, char* funcName);
+
+DllExport void yasi_set_proc_address(YASI_HANDLE h, ULONG processID, char* dllName, char* funcName, PVOID newAddr);
+
+DllExport void yasi_load_dll(YASI_HANDLE h, ULONG processID, wchar_t* fullPath);
+

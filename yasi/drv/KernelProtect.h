@@ -38,8 +38,22 @@ enum
 	CMD_GET_PROCESS_COUNT,
 	CMD_GET_PROCESS_BY_INDEX,
 	CMD_GET_PROCESS_DETAIL,
-	CMD_KILL_PROCESS
+	CMD_KILL_PROCESS,
+	CMD_GET_PROCESS_STRING
 
+};
+
+enum
+{
+	STRING_CSDVersion,
+	STRING_DllPath,
+	STRING_ImagePathName,
+	STRING_CommandLine,
+	STRING_WindowTitle,
+	STRING_DesktopInfo,
+	STRING_ShellInfo,
+	STRING_RuntimeData,
+	STRING_CurrentDirectore
 };
 
 struct PROCESS_RECORD
@@ -67,6 +81,7 @@ void EnumProcessList(ULONG index, struct PROCESS_RECORD* processes);
 ULONG GetProcessCount();
 void GetProcessDetail(ULONG id, struct PROCESS_DETAIL* detail);
 void KillProcess(ULONG id);
+void GetProcessString(ULONG id,  ULONG* str);
 
 enum
 {
@@ -75,7 +90,17 @@ enum
 	FILE_NAME_OFFSET,
 	PROCESS_LINK_OFFSET,
 	PROCESS_ID_OFFSET,
-	EXIT_TIME_OFFSET
+	EXIT_TIME_OFFSET,
+	ProcessParameters_OFFSET,
+	CSDVersion_OFFSET,
+	DllPath_OFFSET,
+	ImagePathName_OFFSET,
+	CommandLine_OFFSET,
+	WindowTitle_OFFSET,
+	DesktopInfo_OFFSET,
+	ShellInfo_OFFSET,
+	RuntimeData_OFFSET,
+	CurrentDirectore_OFFSET
 	
 };
 

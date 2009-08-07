@@ -1,5 +1,8 @@
 #pragma once;
 
+
+
+
 /*
 	output from WinDbg
 */
@@ -115,9 +118,141 @@ ntdll!_EPROCESS
 +0x258 Cookie           : Uint4B
 */
 
+
+/*
+ntdll!_MMSUPPORT
++0x000 LastTrimTime     : _LARGE_INTEGER
++0x008 Flags            : _MMSUPPORT_FLAGS
++0x00c PageFaultCount   : Uint4B
++0x010 PeakWorkingSetSize : Uint4B
++0x014 WorkingSetSize   : Uint4B
++0x018 MinimumWorkingSetSize : Uint4B
++0x01c MaximumWorkingSetSize : Uint4B
++0x020 VmWorkingSetList : Ptr32 _MMWSL
++0x024 WorkingSetExpansionLinks : _LIST_ENTRY
++0x02c Claim            : Uint4B
++0x030 NextEstimationSlot : Uint4B
++0x034 NextAgingSlot    : Uint4B
++0x038 EstimatedAvailable : Uint4B
++0x03c GrowthSinceLastEstimate : Uint4B
+*/
+
+/*
+
+lkd> dt _DISPATCHER_HEADER
+ntdll!_DISPATCHER_HEADER
++0x000 Type             : UChar
++0x001 Absolute         : UChar
++0x002 Size             : UChar
++0x003 Inserted         : UChar
++0x004 SignalState      : Int4B
++0x008 WaitListHead     : _LIST_ENTRY
+
+
+lkd> dt _KPROCESS
+ntdll!_KPROCESS
++0x000 Header           : _DISPATCHER_HEADER
++0x010 ProfileListHead  : _LIST_ENTRY
++0x018 DirectoryTableBase : [2] Uint4B
++0x020 LdtDescriptor    : _KGDTENTRY
++0x028 Int21Descriptor  : _KIDTENTRY
++0x030 IopmOffset       : Uint2B
++0x032 Iopl             : UChar
++0x033 Unused           : UChar
++0x034 ActiveProcessors : Uint4B
++0x038 KernelTime       : Uint4B
++0x03c UserTime         : Uint4B
++0x040 ReadyListHead    : _LIST_ENTRY
++0x048 SwapListEntry    : _SINGLE_LIST_ENTRY
++0x04c VdmTrapcHandler  : Ptr32 Void
++0x050 ThreadListHead   : _LIST_ENTRY
++0x058 ProcessLock      : Uint4B
++0x05c Affinity         : Uint4B
++0x060 StackCount       : Uint2B
++0x062 BasePriority     : Char
++0x063 ThreadQuantum    : Char
++0x064 AutoAlignment    : UChar
++0x065 State            : UChar
++0x066 ThreadSeed       : UChar
++0x067 DisableBoost     : UChar
++0x068 PowerState       : UChar
++0x069 DisableQuantum   : UChar
++0x06a IdealNode        : UChar
++0x06b Flags            : _KEXECUTE_OPTIONS
++0x06b ExecuteOptions   : UChar
+*/
+#pragma  pack (1)
+
+typedef struct _UNICODE_STRING_XP_SP3 {
+	USHORT  Length;
+	USHORT  MaximumLength;
+	PWSTR  Buffer;
+} UNICODE_STRING_XP_SP3, *PUNICODE_STRING_XP_SP3;
+
+
+
+typedef struct _DISPATCHER_HEADER_XP_SP3
+{
+	char Type;
+	char Absolute;
+	char Size;
+	char Inserted;
+	int SignalState;
+	LIST_ENTRY WaitListHead;
+}DISPATCHER_HEADER_XP_SP3, *PDISPATCHER_HEADER_XP_SP3;
+
+
+typedef struct _KPROCESS_XP_SP3
+{
+	DISPATCHER_HEADER_XP_SP3 Header; //16
+	LIST_ENTRY ProfileListHead; //8
+	UINT DirectoryTableBase[2];  //8
+	ULONGLONG LdtDescriptor; //8
+	ULONGLONG Int21Descriptor; //8
+	char unknow[4]; 
+	UINT ActiveProcessors; 
+	UINT KernelTime; 
+	UINT UserTime; 
+	LIST_ENTRY ReadyListHead;
+	SINGLE_LIST_ENTRY SwapListEntry ;
+	PVOID VdmTrapcHandler;
+	LIST_ENTRY ThreadListHead;
+	UINT ProcessLock ;
+	UINT Affinity ;
+	USHORT StackCount;
+	char BasePriority;
+	char ThreadQuantum ;
+	char AutoAlignment ;
+	char State;
+	char ThreadSeed;
+	char DisableBoost;
+	char PowerState;
+	char DisableQuantum;
+	char IdealNode;
+	char Flags;
+}KPROCESS_XP_SP3, *PKPROCESS_XP_SP3;
+
+typedef struct _MMSUPPORT_XP_SP3
+{
+	LARGE_INTEGER LastTrimTime;
+	ULONG Flags;
+	UINT PageFaultCount;
+	UINT PeakWorkingSetSize;
+	UINT WorkingSetSize;
+	UINT MinimumWorkingSetSize;
+	UINT MaximumWorkingSetSize;
+	PVOID VmWorkingSetList;
+	LIST_ENTRY WorkingSetExpansionLinks;
+	UINT Claim;
+	UINT NextEstimationSlot;
+	UINT NextAgingSlot;
+	UINT EstimatedAvailable;
+	UINT GrowthSinceLastEstimate;
+} MMSUPPORT_XP_SP3 , *PMMSUPPORT_XP_SP3;
+
 typedef struct _EPROCESS_XP_SP3
 {
-	char Pcb[108];
+	KPROCESS_XP_SP3 Pcb;
 	char ProcessLock[4];
 	LARGE_INTEGER CreateTime;
 	LARGE_INTEGER ExitTime;
@@ -182,7 +317,7 @@ typedef struct _EPROCESS_XP_SP3
 	UINT CommitChargePeak;
 	PVOID AweInfo;
 	PVOID SeAuditProcessCreationInfo;
-	char Vm[64];
+	MMSUPPORT_XP_SP3 Vm;
 	UINT LastFaultCount;
 	UINT ModifiedPageCount;
 	UINT NumberOfVads;
@@ -196,3 +331,158 @@ typedef struct _EPROCESS_XP_SP3
 	UINT Cookie;
 } EPROCESS_XP_SP3, *PEPROCESS_XP_SP3;
 
+
+/*
+lkd> dt _PEB
+ntdll!_PEB
++0x000 InheritedAddressSpace : UChar
++0x001 ReadImageFileExecOptions : UChar
++0x002 BeingDebugged    : UChar
++0x003 SpareBool        : UChar
++0x004 Mutant           : Ptr32 Void
++0x008 ImageBaseAddress : Ptr32 Void
++0x00c Ldr              : Ptr32 _PEB_LDR_DATA
++0x010 ProcessParameters : Ptr32 _RTL_USER_PROCESS_PARAMETERS
++0x014 SubSystemData    : Ptr32 Void
++0x018 ProcessHeap      : Ptr32 Void
++0x01c FastPebLock      : Ptr32 _RTL_CRITICAL_SECTION
++0x020 FastPebLockRoutine : Ptr32 Void
++0x024 FastPebUnlockRoutine : Ptr32 Void
++0x028 EnvironmentUpdateCount : Uint4B
++0x02c KernelCallbackTable : Ptr32 Void
++0x030 SystemReserved   : [1] Uint4B
++0x034 AtlThunkSListPtr32 : Uint4B
++0x038 FreeList         : Ptr32 _PEB_FREE_BLOCK
++0x03c TlsExpansionCounter : Uint4B
++0x040 TlsBitmap        : Ptr32 Void
++0x044 TlsBitmapBits    : [2] Uint4B
++0x04c ReadOnlySharedMemoryBase : Ptr32 Void
++0x050 ReadOnlySharedMemoryHeap : Ptr32 Void
++0x054 ReadOnlyStaticServerData : Ptr32 Ptr32 Void
++0x058 AnsiCodePageData : Ptr32 Void
++0x05c OemCodePageData  : Ptr32 Void
++0x060 UnicodeCaseTableData : Ptr32 Void
++0x064 NumberOfProcessors : Uint4B
++0x068 NtGlobalFlag     : Uint4B
++0x070 CriticalSectionTimeout : _LARGE_INTEGER
++0x078 HeapSegmentReserve : Uint4B
++0x07c HeapSegmentCommit : Uint4B
++0x080 HeapDeCommitTotalFreeThreshold : Uint4B
++0x084 HeapDeCommitFreeBlockThreshold : Uint4B
++0x088 NumberOfHeaps    : Uint4B
++0x08c MaximumNumberOfHeaps : Uint4B
++0x090 ProcessHeaps     : Ptr32 Ptr32 Void
++0x094 GdiSharedHandleTable : Ptr32 Void
++0x098 ProcessStarterHelper : Ptr32 Void
++0x09c GdiDCAttributeList : Uint4B
++0x0a0 LoaderLock       : Ptr32 Void
++0x0a4 OSMajorVersion   : Uint4B
++0x0a8 OSMinorVersion   : Uint4B
++0x0ac OSBuildNumber    : Uint2B
++0x0ae OSCSDVersion     : Uint2B
++0x0b0 OSPlatformId     : Uint4B
++0x0b4 ImageSubsystem   : Uint4B
++0x0b8 ImageSubsystemMajorVersion : Uint4B
++0x0bc ImageSubsystemMinorVersion : Uint4B
++0x0c0 ImageProcessAffinityMask : Uint4B
++0x0c4 GdiHandleBuffer  : [34] Uint4B
++0x14c PostProcessInitRoutine : Ptr32     void 
++0x150 TlsExpansionBitmap : Ptr32 Void
++0x154 TlsExpansionBitmapBits : [32] Uint4B
++0x1d4 SessionId        : Uint4B
++0x1d8 AppCompatFlags   : _ULARGE_INTEGER
++0x1e0 AppCompatFlagsUser : _ULARGE_INTEGER
++0x1e8 pShimData        : Ptr32 Void
++0x1ec AppCompatInfo    : Ptr32 Void
++0x1f0 CSDVersion       : _UNICODE_STRING
++0x1f8 ActivationContextData : Ptr32 Void
++0x1fc ProcessAssemblyStorageMap : Ptr32 Void
++0x200 SystemDefaultActivationContextData : Ptr32 Void
++0x204 SystemAssemblyStorageMap : Ptr32 Void
++0x208 MinimumStackCommit : Uint4B
+*/
+
+/*
+lkd> dt _RTL_USER_PROCESS_PARAMETERS
+ntdll!_RTL_USER_PROCESS_PARAMETERS
++0x000 MaximumLength    : Uint4B
++0x004 Length           : Uint4B
++0x008 Flags            : Uint4B
++0x00c DebugFlags       : Uint4B
++0x010 ConsoleHandle    : Ptr32 Void
++0x014 ConsoleFlags     : Uint4B
++0x018 StandardInput    : Ptr32 Void
++0x01c StandardOutput   : Ptr32 Void
++0x020 StandardError    : Ptr32 Void
++0x024 CurrentDirectory : _CURDIR
++0x030 DllPath          : _UNICODE_STRING
++0x038 ImagePathName    : _UNICODE_STRING
++0x040 CommandLine      : _UNICODE_STRING
++0x048 Environment      : Ptr32 Void
++0x04c StartingX        : Uint4B
++0x050 StartingY        : Uint4B
++0x054 CountX           : Uint4B
++0x058 CountY           : Uint4B
++0x05c CountCharsX      : Uint4B
++0x060 CountCharsY      : Uint4B
++0x064 FillAttribute    : Uint4B
++0x068 WindowFlags      : Uint4B
++0x06c ShowWindowFlags  : Uint4B
++0x070 WindowTitle      : _UNICODE_STRING
++0x078 DesktopInfo      : _UNICODE_STRING
++0x080 ShellInfo        : _UNICODE_STRING
++0x088 RuntimeData      : _UNICODE_STRING
++0x090 CurrentDirectores : [32] _RTL_DRIVE_LETTER_CURDIR
+*/
+
+/*
+ntdll!_RTL_DRIVE_LETTER_CURDIR
++0x000 Flags            : Uint2B
++0x002 Length           : Uint2B
++0x004 TimeStamp        : Uint4B
++0x008 DosPath          : _STRING
+*/
+
+//comes from http://bbs.pediy.com/archive/index.php?t-71204.html
+typedef struct _PEB_LDR_DATA {
+	ULONG Length;
+	ULONG Initialized;
+	PVOID SsHandle;
+	LIST_ENTRY InLoadOrderModuleList;
+	LIST_ENTRY InMemoryOrderModuleList;
+	LIST_ENTRY InInitializationOrderModuleList;
+} PEB_LDR_DATA, *PPEB_LDR_DATA;
+
+
+typedef struct _LDR_DATA_TABLE_ENTRY_XP_SP3 {
+	LIST_ENTRY InLoadOrderLinks;
+	LIST_ENTRY InMemoryOrderLinks;
+	LIST_ENTRY InInitializationOrderLinks;
+	PVOID DllBase;
+	PVOID EntryPoint;
+	ULONG SizeOfImage;
+	UNICODE_STRING_XP_SP3 FullDllName;
+	UNICODE_STRING_XP_SP3 BaseDllName;
+	ULONG Flags;
+	USHORT LoadCount;
+	USHORT TlsIndex;
+	union {
+		LIST_ENTRY HashLinks;
+		struct {
+			PVOID SectionPointer;
+			ULONG CheckSum;
+		};
+	};
+	union {
+		struct {
+			ULONG TimeDateStamp;
+		};
+		struct {
+			PVOID LoadedImports;
+		};
+	};
+	struct _ACTIVATION_CONTEXT * EntryPointActivationContext;
+	PVOID PatchInformation;
+} LDR_DATA_TABLE_ENTRY_XP_SP3, *PLDR_DATA_TABLE_ENTRY_XP_SP3;
+
+#pragma  pack ()
