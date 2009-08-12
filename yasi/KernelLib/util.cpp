@@ -139,7 +139,8 @@ PVOID GetStringPoint(HANDLE process, ULONG pebAddress, ULONG strID)
 			break;
 		default:
 			return NULL;
-	}
+	}
+
 	return (PVOID)tmpAddress;
 }
 

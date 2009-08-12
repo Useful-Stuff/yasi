@@ -3,6 +3,11 @@
 #include "internal.h"
 #define XP_SP3
 
+#ifdef __cplusplus
+extern "C"
+{
+
+#endif
 
 #define DllExport   __declspec( dllexport )
 typedef void* YASI_HANDLE;
@@ -24,7 +29,11 @@ struct CMD_RECORD
 enum
 {
 	CMD_GET_PROCESS_COUNT,
-	CMD_GET_PROCESS_BY_INDEX,	CMD_GET_PROCESS_DETAIL,	CMD_KILL_PROCESS,	CMD_GET_PROCESS_STRING
+	CMD_GET_PROCESS_BY_INDEX,
+	CMD_GET_PROCESS_DETAIL,
+	CMD_KILL_PROCESS,
+	CMD_GET_PROCESS_STRING
+
 };
 
 enum
@@ -41,7 +50,8 @@ enum
 };
 
 struct PROCESS_RECORD
-{
+{
+
 	ULONG processID;
 	UCHAR imageName[16];
 };
@@ -82,7 +92,13 @@ DllExport void yasi_get_module_info(YASI_HANDLE h, ULONG processID, ULONG index,
 
 DllExport FARPROC yasi_get_proc_address(YASI_HANDLE h, ULONG processID, char* dllName, char* funcName);
 
+DllExport FARPROC yasi_get_export_address(YASI_HANDLE h, ULONG processID, wchar_t* dllName, char* funcName);
+
 DllExport void yasi_set_proc_address(YASI_HANDLE h, ULONG processID, char* dllName, char* funcName, PVOID newAddr);
 
 DllExport void yasi_load_dll(YASI_HANDLE h, ULONG processID, wchar_t* fullPath);
 
+#ifdef __cplusplus
+};
+
+#endif

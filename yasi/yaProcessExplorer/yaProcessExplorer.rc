@@ -1,0 +1,260 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\yaProcessExplorer.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""     // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\yaProcessExplorer.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_YAPROCESSEXPLORER_DIALOG DIALOGEX 0, 0, 548, 353
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "yaProcessExplorer"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Close",IDC_BUTTON_Close,491,7,50,14
+    CONTROL         "",IDC_LIST_PROCESS,"SysListView32",LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,482,339
+END
+
+IDD_DIALOG_DETAIL DIALOGEX 0, 0, 486, 338
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "information",IDC_STATIC,7,7,198,324
+    GROUPBOX        "Loaded Dll",IDC_STATIC,214,7,174,324
+    LTEXT           "DllPath",IDC_STATIC,7,20,23,8
+    LTEXT           "ImagePath",IDC_STATIC,7,35,36,8
+    LTEXT           "CommandLine",IDC_STATIC,7,51,45,8
+    LTEXT           "WindowTitle",IDC_STATIC,7,67,40,8
+    LTEXT           "CurrentDirectory",IDC_STATIC,7,82,55,8
+    EDITTEXT        IDC_EDIT_DLLPATH,63,18,135,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_CMD_LINE,63,50,135,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_IMAGE_PATH,63,33,135,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_WINDOW_TITLE,63,65,135,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_CUR_DIR,64,81,135,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "CreateTime",IDC_STATIC,7,101,38,8
+    LTEXT           "ExitTime",IDC_STATIC,103,100,28,8
+    LTEXT           "CommitCharge",IDC_STATIC,7,113,48,8
+    LTEXT           "PeakVirtualSize",IDC_STATIC,103,114,49,8
+    LTEXT           "VirtualSize",IDC_STATIC,7,127,34,8
+    LTEXT           "WorkingSetPage",IDC_STATIC,103,126,54,8
+    LTEXT           "PrivatePages",IDC_STATIC,7,140,43,8
+    LTEXT           "LockedPages",IDC_STATIC,103,140,42,8
+    LTEXT           "ActiveThreads",IDC_STATIC,7,155,47,8
+    LTEXT           "LastThreadExitStatus",IDC_STATIC,103,154,70,8
+    LTEXT           "ReadOperation",IDC_STATIC,7,169,50,8
+    LTEXT           "WriteOperation",IDC_STATIC,104,169,50,8
+    LTEXT           "OtherOperation",IDC_STATIC,7,185,52,8
+    LTEXT           "ReadTransfer",IDC_STATIC,7,199,45,8
+    LTEXT           "WriteTransfer",IDC_STATIC,104,199,46,8
+    LTEXT           "OtherTransfer",IDC_STATIC,7,214,47,8
+    LTEXT           "CommitChargeLimit",IDC_STATIC,7,228,62,8
+    LTEXT           "CommitChargePeak",IDC_STATIC,7,242,63,8
+    LTEXT           "LastFaultCount",IDC_STATIC,106,230,50,8
+    LTEXT           "ModifiedPageCount",IDC_STATIC,105,242,63,8
+    LTEXT           "NumberOfVads",IDC_STATIC,7,256,49,8
+    LTEXT           "JobStatus",IDC_STATIC,105,256,33,8
+    LTEXT           "LastTrimTime",IDC_STATIC,7,271,42,8
+    LTEXT           "PageFaultCount",IDC_STATIC,105,270,52,8
+    LTEXT           "PeakWorkingSetSize",IDC_STATIC,7,284,66,8
+    LTEXT           "WorkingSetSize",IDC_STATIC,106,286,50,8
+    LTEXT           "MinimumWorkingSetSize",IDC_STATIC,7,300,77,8
+    LTEXT           "MaximumWorkingSetSize",IDC_STATIC,7,315,80,8
+    EDITTEXT        IDC_EDIT2,61,97,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT3,61,111,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT4,61,124,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT5,61,138,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT6,61,151,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT7,61,164,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT8,61,182,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT9,61,197,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT10,61,213,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT11,70,227,32,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT12,70,241,32,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT13,62,255,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT14,61,269,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT15,73,283,28,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT16,91,297,110,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT17,91,313,110,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT18,159,98,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT19,159,112,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT20,159,125,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT21,159,138,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT22,174,152,25,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT23,160,167,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT24,159,197,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT25,161,228,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT26,171,242,30,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT27,161,255,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT28,161,269,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT29,161,283,40,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_LIST_DLLS,"SysListView32",LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,223,16,159,308
+    EDITTEXT        IDC_EDIT_DLL,391,25,80,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Read",IDC_BUTTON_READ,392,114,37,14
+    EDITTEXT        IDC_EDIT_ADDRESS,392,96,79,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_FUNC,391,68,79,14,ES_AUTOHSCROLL
+    LTEXT           "Dll Name",IDC_STATIC,391,15,28,8
+    LTEXT           "Function Name",IDC_STATIC,391,57,48,8
+    LTEXT           " Function Address",IDC_STATIC,392,86,58,8
+    PUSHBUTTON      "Write",IDC_BUTTON_WRITE,433,114,37,14
+    PUSHBUTTON      "Load Dll",IDC_BUTTON_LOAD,393,137,50,14
+    COMBOBOX        IDC_COMBO_IORE,391,41,80,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "TODO: <Company name>"
+            VALUE "FileDescription", "TODO: <File description>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "yaProcessExplorer.exe"
+            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
+            VALUE "OriginalFilename", "yaProcessExplorer.exe"
+            VALUE "ProductName", "TODO: <Product name>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_YAPROCESSEXPLORER_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 541
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 346
+    END
+
+    IDD_DIALOG_DETAIL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 479
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 331
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\yaProcessExplorer.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"     // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

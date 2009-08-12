@@ -256,13 +256,16 @@ FARPROC yasi_get_proc_address(YASI_HANDLE h, ULONG processID, char* _destDllName
 			ULONG funCount = 0;
 			while( imgThunkData.u1.Function )
 			{
-				IMAGE_IMPORT_BY_NAME* impName = (IMAGE_IMPORT_BY_NAME*)malloc(sizeof(IMAGE_IMPORT_BY_NAME)+32);
-				ReadProcessMemory(process, (PVOID)(dllBase+orgTHunkData.u1.AddressOfData), impName, sizeof(IMAGE_IMPORT_BY_NAME)+32, NULL);
-
-				char funcName[32] = {0};
+				IMAGE_IMPORT_BY_NAME* impName = (IMAGE_IMPORT_BY_NAME*)malloc(sizeof(IMAGE_IMPORT_BY_NAME)+64);
+				memset(impName, 0, sizeof(IMAGE_IMPORT_BY_NAME)+64);
+				if( !ReadProcessMemory(process, (PVOID)(dllBase+orgTHunkData.u1.AddressOfData), impName, sizeof(IMAGE_IMPORT_BY_NAME)+64, NULL))
+					break;
+				if( impName->Name == NULL )
+					break;
+				char funcName[64] = {0};
 				strcpy(funcName, (char*)(impName->Name));
 				mtoupper(funcName);
-				if( strnicmp(funcName, desFuncName, 32) == 0 )
+				if( strnicmp(funcName, desFuncName, 64) == 0 )
 				{
 					free(impName);
 					return (FARPROC)imgThunkData.u1.Function;
@@ -321,17 +324,25 @@ void yasi_set_proc_address(YASI_HANDLE h, ULONG processID, char* _destDllName, c
 			ULONG funCount = 0;
 			while( imgThunkData.u1.Function )
 			{
-				IMAGE_IMPORT_BY_NAME* impName = (IMAGE_IMPORT_BY_NAME*)malloc(sizeof(IMAGE_IMPORT_BY_NAME)+32);
-				ReadProcessMemory(process, (PVOID)(dllBase+orgTHunkData.u1.AddressOfData), impName, sizeof(IMAGE_IMPORT_BY_NAME)+32, NULL);
+				IMAGE_IMPORT_BY_NAME* impName = (IMAGE_IMPORT_BY_NAME*)malloc(sizeof(IMAGE_IMPORT_BY_NAME)+64);
+				ReadProcessMemory(process, (PVOID)(dllBase+orgTHunkData.u1.AddressOfData), impName, sizeof(IMAGE_IMPORT_BY_NAME)+64, NULL);
 
-				char funcName[32] = {0};
+				char funcName[64] = {0};
 				strcpy(funcName, (char*)(impName->Name));
 				mtoupper(funcName);
-				if( strnicmp(funcName, desFuncName, 32) == 0 )
+				if( strnicmp(funcName, desFuncName, 64) == 0 )
 				{
 					free(impName);
 					ULONG funcAddress = (dllBase+importDes.FirstThunk + funCount*sizeof(IMAGE_THUNK_DATA));
-					WriteProcessMemory(process, (LPVOID)funcAddress, &newAddr, 4, NULL);
+					DWORD dwRet = 0;
+					DWORD error = 0;
+					BOOL ret = WriteProcessMemory(process, (LPVOID)funcAddress, &newAddr, 4, &dwRet);
+					if( !ret )
+					{
+						error = GetLastError();
+						//一般来说会返回 ERROR_NOACCESS，也就是说不让访问。
+						//需要从内核走比较好.
+					}
 					return;
 				}
 
@@ -347,4 +358,96 @@ void yasi_set_proc_address(YASI_HANDLE h, ULONG processID, char* _destDllName, c
 
 	}
 	return ;
+}
+
+
+FARPROC yasi_get_export_address(YASI_HANDLE h, ULONG processID, wchar_t* _destDllName, char* _desFuncName)
+{
+	wchar_t* destDllName = new wchar_t[(wcslen(_destDllName)+1)];
+	memset(destDllName, 0, sizeof(wchar_t)*(wcslen(_destDllName)+1));
+	wcscpy(destDllName, _destDllName);
+	char* desFuncName = new char[strlen(_desFuncName)+1];
+	memset(desFuncName, 0, strlen(_desFuncName)+1);
+	strcpy(desFuncName, _desFuncName);
+	mtoupper(desFuncName);
+	//ULONG dllBase = yasi_get_base_address(h, processID);
+	ULONG dllBase = NULL;
+	BOOL found = FALSE;
+	UINT count = yasi_get_module_count(h, processID);
+	for( int index = 0 ; index < count; index++ )
+	{
+		LDR_DATA_TABLE_ENTRY_XP_SP3 info = {0};
+		yasi_get_module_info(h, processID, index, &info);
+		wchar_t tmpStr[256] = {0};
+		yasi_get_process_string(h, processID, info.BaseDllName.Buffer, tmpStr, info.BaseDllName.Length);
+		if( wcscmp(tmpStr, _destDllName) == 0 )
+		{
+			found = TRUE;
+			dllBase = (ULONG)info.DllBase;
+			break;
+		}
+	}
+	if( !found )
+		return NULL;
+
+	HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
+	if( process == NULL )
+		return NULL;
+	IMAGE_DOS_HEADER dosHeader = {0};
+	ReadProcessMemory(process, (PVOID)dllBase, &dosHeader, sizeof(IMAGE_DOS_HEADER), NULL);
+	IMAGE_NT_HEADERS ntHeader = {0};
+	ReadProcessMemory(process, (PVOID)(dllBase+dosHeader.e_lfanew), &ntHeader, sizeof(IMAGE_NT_HEADERS), NULL);
+	IMAGE_OPTIONAL_HEADER optionalHeader = ntHeader.OptionalHeader;
+	IMAGE_DATA_DIRECTORY dataDirectory = optionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+	//ReadProcessMemory(process, (PVOID)(optionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress), &dataDirectory,
+	//	sizeof( IMAGE_DATA_DIRECTORY), NULL);
+	IMAGE_EXPORT_DIRECTORY ExportDirectory = {0};
+	ReadProcessMemory(process, (PVOID)(dllBase + dataDirectory.VirtualAddress), &ExportDirectory, sizeof(ExportDirectory), NULL);
+	//some code comes from http://bbs.pediy.com/showthread.php?t=58199
+	PULONG NameTableBase = (PULONG)((PCHAR)dllBase + (ULONG)ExportDirectory.AddressOfNames);
+	PUSHORT  NameOrdinalTableBase = (PUSHORT )((PCHAR)dllBase + (ULONG)ExportDirectory.AddressOfNameOrdinals);
+
+	ULONG Middle = 0;
+	ULONG High = ExportDirectory.NumberOfNames - 1;
+	ULONG Low = 0;
+	while (High >= Low) {
+		Middle = (Low + High) >> 1;
+		ULONG nameTableIndex = 0;
+		ReadProcessMemory(process, (PVOID)(NameTableBase+Low), &nameTableIndex, sizeof(ULONG), NULL);
+		PCHAR nameBase = (PCHAR)((ULONG)dllBase + (ULONG)nameTableIndex);
+		char tmpName[64] = {0};
+		ReadProcessMemory(process, (PVOID)(nameBase), tmpName, 64, NULL);
+		mtoupper(tmpName);
+
+
+		int Result = strcmp (tmpName, desFuncName);
+
+		if( Result != 0 ){
+			Low++;
+		}else {
+			break;
+		}
+	}
+
+	if (High < Low) {
+		return NULL;
+	}
+
+
+	USHORT OrdinalNumber = 0;
+	ReadProcessMemory(process, (PVOID)(NameOrdinalTableBase+Low), &OrdinalNumber, sizeof(USHORT), NULL);
+
+
+	if ((ULONG)OrdinalNumber >= ExportDirectory.NumberOfFunctions) {
+		return NULL;
+	}
+
+	PULONG Addr = (PULONG)((PCHAR)dllBase + (ULONG)ExportDirectory.AddressOfFunctions);
+
+	PULONG FunctionAddress  = 0;
+	ULONG addrOffset = 0;
+	ReadProcessMemory(process, Addr+OrdinalNumber, &addrOffset, sizeof(ULONG), NULL);
+	FunctionAddress = (PULONG)(dllBase + addrOffset);
+	return (FARPROC)FunctionAddress;
+
 }
