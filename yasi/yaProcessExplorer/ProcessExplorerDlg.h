@@ -42,4 +42,5 @@ private:
 	afx_msg void OnClose();
 	afx_msg void OnLvnItemchangedListProcess(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMDblclkListProcess(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedButtonKill();
 };

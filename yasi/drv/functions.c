@@ -120,13 +120,17 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	struct CMD_RECORD	*cmd;
 	ULONG				*tmp;
 	ULONG				strID;
+	PVOID				baseAddress;
+	PVOID				destAddress;
+	ULONG				size;
+	ULONG				bytesProcessed;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
     inBufLength = irpStack->Parameters.DeviceIoControl.InputBufferLength;
     outBufLength = irpStack->Parameters.DeviceIoControl.OutputBufferLength;
     ioControlCode = irpStack->Parameters.DeviceIoControl.IoControlCode;
     if (ioControlCode == IOCTL_CMD_READ)
     {
-        DbgPrint("[ring0] IOCTL_CMD_READ : 0x%X", ioControlCode);
+        //DbgPrint("[ring0] IOCTL_CMD_READ : 0x%X", ioControlCode);
         InputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
 		cmd = (struct CMD_RECORD*)InputBuffer;
 		switch( cmd->op ){
@@ -134,15 +138,15 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
 		        memset(OutputBuffer, 0, outBufLength);
 		        Irp->IoStatus.Information = outBufLength;
-				DbgPrint("[ring0] output length %d", outBufLength);
+				//DbgPrint("[ring0] output length %d", outBufLength);
 				*OutputBuffer = GetProcessCount();
 				break;
-			case CMD_GET_PROCESS_BY_INDEX:
+			case CMD_GET_PROCESS_BY_INDEX:
 				index = *((ULONG*)&cmd->param[0]);
 				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
 		        memset(OutputBuffer, 0, outBufLength);
 		        Irp->IoStatus.Information = outBufLength;
-				DbgPrint("[ring0] output length %d", outBufLength);
+				//DbgPrint("[ring0] output length %d", outBufLength);
 				EnumProcessList(index, (struct PROCESS_RECORD *) OutputBuffer);
 				break;
 			case CMD_GET_PROCESS_DETAIL:
@@ -150,7 +154,7 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
 		        memset(OutputBuffer, 0, outBufLength);
 		        Irp->IoStatus.Information = outBufLength;
-				DbgPrint("[ring0] output length %d", outBufLength);
+				//DbgPrint("[ring0] output length %d", outBufLength);
 				GetProcessDetail(processID, (struct PROCESS_DETAIL *) OutputBuffer);
 				break;
 			case CMD_KILL_PROCESS:
@@ -165,9 +169,33 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
 		        memset(OutputBuffer, 0, outBufLength);
 				Irp->IoStatus.Information = outBufLength;
-				DbgPrint("[ring0] output length %d", outBufLength);
-				DbgPrint("[ring0] processID %d", processID);
+				//DbgPrint("[ring0] output length %d", outBufLength);
+				//DbgPrint("[ring0] processID %d", processID);
 				GetProcessString(processID, OutputBuffer);
+				break;
+			case CMD_READ_PROCESS_MEMORY:
+				tmp = (ULONG*)&cmd->param[0];
+				processID = *tmp;
+				baseAddress = *(++tmp);
+				destAddress = *(++tmp);
+				size = *(++tmp);
+				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
+				Irp->IoStatus.Information = outBufLength;
+				YasiReadProcessMemory(processID, baseAddress, destAddress, size, &bytesProcessed);
+				if( outBufLength != 0 )
+					*((ULONG*)OutputBuffer) = bytesProcessed;
+				break;
+			case CMD_WRITE_PROCESS_MEMORY:
+				tmp = (ULONG*)&cmd->param[0];
+				processID = *tmp;
+				baseAddress = *(++tmp);
+				destAddress = *(++tmp);
+				size = *(++tmp);
+				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
+				Irp->IoStatus.Information = outBufLength;
+				YasiWriteProcessMemory(processID, baseAddress, destAddress, size, &bytesProcessed);
+				if( outBufLength != 0 )
+					*((ULONG*)OutputBuffer) = bytesProcessed;
 				break;
 			default:
 				Status = STATUS_ACCESS_DENIED;

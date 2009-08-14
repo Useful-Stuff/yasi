@@ -11,8 +11,8 @@
  **********************************************************************/
 #define _X86_
 
-
 #include <wdm.h>
+
 #include "KernelProtect.h"
 
  
@@ -39,6 +39,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
  **********************************************************************/
 NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPath)
 {
+	//RTL_OSVERSIONINFOW versionInfo;
     NTSTATUS NtStatus = STATUS_SUCCESS;
     UINT uiIndex = 0;
     PDEVICE_OBJECT pDeviceObject = NULL;
@@ -75,7 +76,6 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
          * the driver cannot be dynamically unloaded.
          */
         pDriverObject->DriverUnload =  KernelProtect_Unload; 
-
         /* 
          * Setting the flags on the device driver object determine what type of I/O
          * you wish to use.

@@ -37,6 +37,7 @@ BEGIN_MESSAGE_MAP(CProcessExplorerDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_PROCESS, &CProcessExplorerDlg::OnLvnItemchangedListProcess)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_PROCESS, &CProcessExplorerDlg::OnNMDblclkListProcess)
+	ON_BN_CLICKED(IDC_BUTTON_KILL, &CProcessExplorerDlg::OnBnClickedButtonKill)
 END_MESSAGE_MAP()
 
 
@@ -227,4 +228,15 @@ void CProcessExplorerDlg::OnNMDblclkListProcess(NMHDR *pNMHDR, LRESULT *pResult)
 	SetTimer(1, 3000, NULL);
 
 	*pResult = 0;
+}
+
+void CProcessExplorerDlg::OnBnClickedButtonKill()
+{
+	POSITION pos = m_ProcessView.GetFirstSelectedItemPosition();
+	UINT selected = m_ProcessView.GetNextSelectedItem(pos);
+	wchar_t sz_pid[32] = {0};
+	m_ProcessView.GetItemText(selected, 1, sz_pid, 32);
+	int pid;
+	swscanf(sz_pid, _T("%d"), &pid);
+	yasi_kill_process(core, pid);
 }

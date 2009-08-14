@@ -32,7 +32,9 @@ enum
 	CMD_GET_PROCESS_BY_INDEX,
 	CMD_GET_PROCESS_DETAIL,
 	CMD_KILL_PROCESS,
-	CMD_GET_PROCESS_STRING
+	CMD_GET_PROCESS_STRING,
+	CMD_READ_PROCESS_MEMORY,
+	CMD_WRITE_PROCESS_MEMORY
 
 };
 
@@ -97,6 +99,17 @@ DllExport FARPROC yasi_get_export_address(YASI_HANDLE h, ULONG processID, wchar_
 DllExport void yasi_set_proc_address(YASI_HANDLE h, ULONG processID, char* dllName, char* funcName, PVOID newAddr);
 
 DllExport void yasi_load_dll(YASI_HANDLE h, ULONG processID, wchar_t* fullPath);
+
+DllExport BOOL yasi_read_process_memory(YASI_HANDLE h, ULONG processID, PVOID lpBaseAddress, PVOID lpBuffer, ULONG size, ULONG* bytesRead);
+
+DllExport BOOL yasi_write_process_memory(YASI_HANDLE h, ULONG processID, PVOID lpBaseAddress, PVOID lpBuffer, ULONG size, ULONG* bytesWrite);
+
+//inline hook的方法就是：
+//1。 找出目标函数的地址DestFuncAddress
+//2。 BYTE JmpAddress[5]={0xE9,0,0,0,0};       跳转指令
+//3。 *(ULONG *)(JmpAddress+1)=(ULONG)MyFuncAddress-((ULONG)DestFuncAddress+5);
+//4.  yasi_write_process_memory(core, pid, (BYTE *)DestFuncAddress,JmpAddress,5);
+//但是我不提供现成的方法
 
 #ifdef __cplusplus
 };

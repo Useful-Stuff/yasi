@@ -1,4 +1,5 @@
 #pragma once
+
 enum
 {
 	EPROCESS_SIZE = 0,
@@ -21,8 +22,8 @@ enum
 	ImageBaseAddress_OFFSET
 
 };
-PVOID GetStringPoint(HANDLE process, ULONG pebAddress, ULONG strID);
+PVOID GetStringPoint(void* h, ULONG processID, ULONG pebAddress, ULONG strID);
 ULONG GetPlantformDependentInfo( ULONG dwFlag ) ;
-BOOL ReadUnicodeString(HANDLE process, ULONG unicodeAddress, wchar_t* str);
+BOOL ReadUnicodeString(void* h, ULONG processID, ULONG unicodeAddress, wchar_t* str);
 void mtoupper(char* s);
 void AdjustPrivilege();

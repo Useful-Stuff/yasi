@@ -4,7 +4,7 @@
 
 #ifndef __EXAMPLE_H__
 #define __EXAMPLE_H__
-
+#define XP_SP3
 
 typedef unsigned int UINT;
 typedef char * PCHAR;
@@ -30,7 +30,8 @@ struct CMD_RECORD
 {
 	ULONG op;
 	ULONG total_len;
-	char  param[0];
+	char  param[0];
+
 };
 
 enum
@@ -39,7 +40,9 @@ enum
 	CMD_GET_PROCESS_BY_INDEX,
 	CMD_GET_PROCESS_DETAIL,
 	CMD_KILL_PROCESS,
-	CMD_GET_PROCESS_STRING
+	CMD_GET_PROCESS_STRING,
+	CMD_READ_PROCESS_MEMORY,
+	CMD_WRITE_PROCESS_MEMORY
 
 };
 
@@ -57,7 +60,8 @@ enum
 };
 
 struct PROCESS_RECORD
-{
+{
+
 	ULONG processID;
 	UCHAR imageName[16];
 };
@@ -82,9 +86,12 @@ ULONG GetProcessCount();
 void GetProcessDetail(ULONG id, struct PROCESS_DETAIL* detail);
 void KillProcess(ULONG id);
 void GetProcessString(ULONG id,  ULONG* str);
+BOOL YasiReadProcessMemory(ULONG id, PVOID lpBaseAddress, PVOID lpBuffer, ULONG size, ULONG* bytesRead);
+BOOL YasiWriteProcessMemory(ULONG id, PVOID lpBaseAddress,PVOID lpBuffer, ULONG nSize, ULONG * lpNumberOfBytesWritten);
 
 enum
-{
+{
+
 	EPROCESS_SIZE = 0,
 	PEB_OFFSET,
 	FILE_NAME_OFFSET,
@@ -100,7 +107,9 @@ enum
 	DesktopInfo_OFFSET,
 	ShellInfo_OFFSET,
 	RuntimeData_OFFSET,
-	CurrentDirectore_OFFSET
+	CurrentDirectore_OFFSET,
+	PorcessThreadListEntry_OFFSET,
+	ThreadExitStatus_OFFSET
 	
 };
 

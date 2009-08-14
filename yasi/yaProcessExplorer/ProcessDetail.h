@@ -103,4 +103,6 @@ private:
 	BOOL CStrCopyToCharStr(CString& src, char* des);
 	afx_msg void OnBnClickedButtonLoad();
 	CComboBox m_IorE;
+	afx_msg void OnCbnSelchangeComboIore();
+	CButton m_BtnWrite;
 };

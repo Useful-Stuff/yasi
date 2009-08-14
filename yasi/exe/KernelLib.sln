@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yaProcessExplorer", "..\yaP
 		{60BAFCAE-C993-4373-857B-D18941277678} = {60BAFCAE-C993-4373-857B-D18941277678}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Drv", "..\drv\Drv.vcproj", "{C21D2338-D08B-41E2-B524-303C5B72CE0F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,6 +33,10 @@ Global
 		{8644B4C9-1266-4E6B-85F9-2475056E07FF}.Debug|Win32.Build.0 = Debug|Win32
 		{8644B4C9-1266-4E6B-85F9-2475056E07FF}.Release|Win32.ActiveCfg = Release|Win32
 		{8644B4C9-1266-4E6B-85F9-2475056E07FF}.Release|Win32.Build.0 = Release|Win32
+		{C21D2338-D08B-41E2-B524-303C5B72CE0F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C21D2338-D08B-41E2-B524-303C5B72CE0F}.Debug|Win32.Build.0 = Debug|Win32
+		{C21D2338-D08B-41E2-B524-303C5B72CE0F}.Release|Win32.ActiveCfg = Release|Win32
+		{C21D2338-D08B-41E2-B524-303C5B72CE0F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

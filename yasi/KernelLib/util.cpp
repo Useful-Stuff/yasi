@@ -2,20 +2,20 @@
 #include "util.h"
 #include <windows.h>
 #include "../internal.h"
+#include "../yasi.h"
 
-
-enum
-{
-	STRING_CSDVersion,
-	STRING_DllPath,
-	STRING_ImagePathName,
-	STRING_CommandLine,
-	STRING_WindowTitle,
-	STRING_DesktopInfo,
-	STRING_ShellInfo,
-	STRING_RuntimeData,
-	STRING_CurrentDirectore
-};
+//enum
+//{
+//	STRING_CSDVersion,
+//	STRING_DllPath,
+//	STRING_ImagePathName,
+//	STRING_CommandLine,
+//	STRING_WindowTitle,
+//	STRING_DesktopInfo,
+//	STRING_ShellInfo,
+//	STRING_RuntimeData,
+//	STRING_CurrentDirectore
+//};
 
 ULONG
 GetPlantformDependentInfo(
@@ -102,13 +102,13 @@ GetPlantformDependentInfo(
 	return ans;   
 }
 
-PVOID GetStringPoint(HANDLE process, ULONG pebAddress, ULONG strID)
+PVOID GetStringPoint(void* h, ULONG processID, ULONG pebAddress, ULONG strID)
 {
 	ULONG tmpAddress = 0;
 	ULONG dwRead = 0;
 	PVOID addr = (PVOID*)(pebAddress + GetPlantformDependentInfo(ProcessParameters_OFFSET));
 	ULONG processParametersAddress;
-	ReadProcessMemory(process, addr, &processParametersAddress, sizeof(ULONG), &dwRead);
+	yasi_read_process_memory(h, processID, addr, &processParametersAddress, sizeof(ULONG), &dwRead);
 	switch( strID ){
 		case	STRING_CSDVersion:
 			tmpAddress = (ULONG)pebAddress + GetPlantformDependentInfo(CSDVersion_OFFSET);
@@ -144,20 +144,20 @@ PVOID GetStringPoint(HANDLE process, ULONG pebAddress, ULONG strID)
 	return (PVOID)tmpAddress;
 }
 
-BOOL ReadUnicodeString(HANDLE process, ULONG unicodeAddress, wchar_t* str)
+BOOL ReadUnicodeString(void* h, ULONG processID, ULONG unicodeAddress, wchar_t* str)
 {
 	ULONG dwRead = 0;
 	PVOID strAddr;
 	//strAddr = (PVOID)unicodeAddress;
 	UNICODE_STRING_XP_SP3 uniStr = {0};
-	ReadProcessMemory(process, (LPCVOID)unicodeAddress, &uniStr, sizeof(UNICODE_STRING_XP_SP3), &dwRead);
+	yasi_read_process_memory((PVOID)h, processID, (PVOID)unicodeAddress, &uniStr, sizeof(UNICODE_STRING_XP_SP3), &dwRead);
 	strAddr = uniStr.Buffer;
 	ULONG size = 0;
 	if( uniStr.Length > 4096 )
 		size = 4094;
 	else
 		size = uniStr.Length;
-	return ReadProcessMemory(process, strAddr, str, size, &dwRead);
+	return yasi_read_process_memory(h, processID, strAddr, str, size, &dwRead);
 }
 
 

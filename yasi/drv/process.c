@@ -10,10 +10,14 @@ GetPlantformDependentInfo(
     ULONG dwFlag
 )  
 {   
-    ULONG current_build;   
+#ifdef XP_SP3
+	ULONG current_build = 2600;   
+#else
+	ULONG current_build = 0;  
+#endif
     ULONG ans = 0;   
    
-    PsGetVersion(NULL, NULL, &current_build, NULL);   
+    //PsGetVersion(NULL, NULL, &current_build, NULL);   
    
     switch ( dwFlag )  
     {   
@@ -77,12 +81,19 @@ GetPlantformDependentInfo(
 	case CurrentDirectore_OFFSET:
 		if (current_build == 2600)  ans = 0x90;  
 		break;
+	case PorcessThreadListEntry_OFFSET:
+		if( current_build == 2600) ans = 0x1b0;
+		break;
+	case ThreadExitStatus_OFFSET:
+		if( current_build == 2600 ) ans = 0x1d0;
+		break;
     }   
     return ans;   
 }
 
 ULONG GetProcessCount()
-{
+{
+
 	struct PROCESS_RECORD	*ProcessInfo;
     ULONG            EProcess;
     ULONG            FirstProcess;
@@ -197,7 +208,7 @@ void GetProcessDetail(ULONG id, struct PROCESS_DETAIL* detail)
 	found = FALSE;
 	found = FindProcessByID(id, &EProcess);
 	if( found ){
-		DbgPrint("[ring0] found process");
+		//DbgPrint("[ring0] found process");
 		EProcess_sp3 = (PEPROCESS_XP_SP3)EProcess;
 		memcpy(&(detail->process), EProcess_sp3, sizeof(EPROCESS_XP_SP3));
 		fullName = (struct UNICODE_STRING*)EProcess_sp3->SeAuditProcessCreationInfo;
@@ -207,66 +218,202 @@ void GetProcessDetail(ULONG id, struct PROCESS_DETAIL* detail)
 			nameLen = fullName->Length;
 		memcpy(&(detail->fullName[0]), fullName->Buffer, nameLen);
 	}
-	
+	
+
+
 }
 
-void KillProcess(ULONG id)
-{
+
+BOOLEAN _stdcall
+KeInsertQueueApc (PKAPC	Apc,
+				  PVOID	SystemArgument1,
+				  PVOID	SystemArgument2,
+				  KPRIORITY PriorityBoost);
+
+VOID _stdcall
+KeInitializeApc(
+				IN PKAPC  Apc,
+				IN PKTHREAD  Thread,
+				IN char  TargetEnvironment,
+				IN PKKERNEL_ROUTINE  KernelRoutine,
+				IN PKRUNDOWN_ROUTINE  RundownRoutine OPTIONAL,
+				IN PKNORMAL_ROUTINE  NormalRoutine,
+				IN KPROCESSOR_MODE  Mode,
+				IN PVOID  Context);
+
+
+NTSTATUS PspTerminateThreadByPointer(PETHREAD Thread, NTSTATUS status);
+typedef VOID (*MyPspExitThread)(NTSTATUS status);
+
+
+ULONG GetPspTerminateThreadByPointer()
+{
+	char * PsTerminateSystemThreadAddr;
+	int iLen;
+	ULONG dwAddr;
+	ULONG NtTerminateThreadAddr;
+	char * pAddr;
+
+			PsTerminateSystemThreadAddr= (char *)PsTerminateSystemThread;
+			__asm
+			{
+					__emit 0x90;
+					__emit 0x90;
+			}
+			for (iLen=0;iLen<50;iLen++)
+			{
+					if (*PsTerminateSystemThreadAddr == (char)0xff
+						&& *(PsTerminateSystemThreadAddr+1) == (char)0x75
+						&& *(PsTerminateSystemThreadAddr+2) == (char)0x08
+						)
+					{
+							__asm
+							{
+									__emit 0x90;
+									__emit 0x90;
+							}
+							PsTerminateSystemThreadAddr += 5;
+							dwAddr = *(ULONG *)PsTerminateSystemThreadAddr + (ULONG)PsTerminateSystemThreadAddr +4;
+
+							//DbgPrint("PspTerminateThreadByPointer:: 0x%x ",dwAddr);
+							return dwAddr;
+							//break;
+					}
+					PsTerminateSystemThreadAddr++;
+			}
+	return FALSE;
+}
+
+
+PVOID GetPspExitThread()
+
+{
+
+	ULONG sPtr;
+
+	sPtr = (ULONG)GetPspTerminateThreadByPointer();
+
+	while ( sPtr < (ULONG)GetPspTerminateThreadByPointer() + 0x45 ) //0x45 = 本机上 PspTerminateThreadByPointer 肥胖程度
+
+	{
+
+		if ( *(WORD*)sPtr == 3189 )
+
+		{
+
+			return (PVOID)(*(ULONG*)(sPtr + 3) + sPtr + 7);        
+
+		}
+
+		sPtr ++;
+
+	}
+
+	return NULL;
+
+}
+
+
+VOID _stdcall
+PiTerminateThreadRundownRoutine(PKAPC Apc)
+{
+	ExFreePool(Apc);
+}
+
+VOID _stdcall
+PiTerminateThreadKernelRoutine(PKAPC Apc,
+							   PKNORMAL_ROUTINE* NormalRoutine,
+							   PVOID* NormalContext,
+							   PVOID* SystemArgument1,
+							   PVOID* SystemArguemnt2)
+{
+	ExFreePool(Apc);
+}
+
+VOID _stdcall
+PiTerminateThreadNormalRoutine(PVOID NormalContext,
+							   PVOID SystemArgument1,
+							   PVOID SystemArgument2)
+{
+	MyPspExitThread  exitThread = (MyPspExitThread)GetPspExitThread();
+	if( exitThread )
+		exitThread(STATUS_SUCCESS);
+}
+
+
+void KillProcessByAPC(ULONG id)
+{
+	KSPIN_LOCK		PiThreadListLock;
+	PKAPC			Apc;
 	BOOL 			found;
 	ULONG           EProcess;
-	PVOID                ProcessHandle;
-	
+	KIRQL			oldLvl;
+	PLIST_ENTRY		current_entry;
+	PETHREAD		current;
+#ifdef XP_SP3
+	PEPROCESS_XP_SP3 Process;
+#else
+	PEPROCESS		Process;
+#endif
 	EProcess = 0;
 	found = FALSE;
 	found = FindProcessByID(id, &EProcess);
 	if( found ){
-		
-	   if ( ObOpenObjectByPointer( (PVOID)EProcess, 0, NULL, 0, NULL, KernelMode, &ProcessHandle) != STATUS_SUCCESS)
-	       return;
-	   ZwTerminateProcess( (HANDLE)ProcessHandle, STATUS_SUCCESS);
-	   ZwClose( (HANDLE)ProcessHandle );
+#ifdef XP_SP3
+		Process = (PEPROCESS_XP_SP3 )EProcess;
+#else
+		Process = (PEPROCESS)EProcess;
+#endif 
+		KeInitializeSpinLock(&PiThreadListLock);
+		Process->ExitStatus = STATUS_SUCCESS;
+		KeAcquireSpinLock(&PiThreadListLock, &oldLvl);
+		current_entry = Process->ThreadListHead.Flink;
+		while( current_entry != &Process->ThreadListHead ){
+			current = (PETHREAD)((ULONG)current_entry - GetPlantformDependentInfo(PorcessThreadListEntry_OFFSET));
+			if( current != PsGetCurrentThread()){
+				KeReleaseSpinLock(&PiThreadListLock, oldLvl);
+				*((ULONG*)((ULONG)current+GetPlantformDependentInfo(ThreadExitStatus_OFFSET))) = STATUS_SUCCESS;
+				Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), 1001);
+				KeInitializeApc(Apc, (PKTHREAD)((ULONG)current),
+					0, 
+					PiTerminateThreadKernelRoutine,
+					PiTerminateThreadRundownRoutine,
+					PiTerminateThreadNormalRoutine,
+					KernelMode, NULL
+					);
+				//此处会死锁,估计是current算得不对
+				KeInsertQueueApc(Apc, NULL, NULL, IO_NO_INCREMENT);
+				KeAcquireSpinLock(&PiThreadListLock, &oldLvl);
+				current_entry = Process->ThreadListHead.Flink;
+			}else{
+				current_entry = current_entry->Flink;
+			}
+		}
+		KeReleaseSpinLock(&PiThreadListLock, oldLvl);
 	}
 }
-/*
-PVOID GetStringPoint(ULONG EProcess, ULONG strID)
+
+void KillProcess(ULONG id)
 {
-	ULONG pebAddress;
-	ULONG processParametersAddress;
-	ULONG tmpAddress;
-	pebAddress = *((ULONG*)(EProcess+GetPlantformDependentInfo(PEB_OFFSET)));
-	processParametersAddress = *((ULONG*)(pebAddress + GetPlantformDependentInfo(ProcessParameters_OFFSET)));
-	switch( strID ){
-		case	STRING_CSDVersion:
-			tmpAddress = pebAddress + GetPlantformDependentInfo(CSDVersion_OFFSET);
-			break;
-		case	STRING_DllPath:
-			tmpAddress = processParametersAddress + GetPlantformDependentInfo(STRING_DllPath);
-			break;
-		case	STRING_ImagePathName:
-			tmpAddress = processParametersAddress + GetPlantformDependentInfo(STRING_ImagePathName);
-			break;
-		case	STRING_CommandLine:
-			tmpAddress = processParametersAddress + GetPlantformDependentInfo(STRING_CommandLine);
-			break;
-		case	STRING_WindowTitle:
-			tmpAddress = processParametersAddress + GetPlantformDependentInfo(STRING_WindowTitle);
-			break;
-		case	STRING_DesktopInfo:
-			tmpAddress = processParametersAddress + GetPlantformDependentInfo(STRING_DesktopInfo);
-			break;
-		case	STRING_ShellInfo:
-			tmpAddress = processParametersAddress + GetPlantformDependentInfo(STRING_ShellInfo);
-			break;
-		case	STRING_RuntimeData:
-			tmpAddress = processParametersAddress + GetPlantformDependentInfo(STRING_RuntimeData);
-			break;
-		default:
-			return NULL;
-	}
-	return (PVOID)tmpAddress;
+
+	BOOL 			found;
+	ULONG           EProcess;
+	PVOID                ProcessHandle;
+
+	//return KillProcessByAPC(id);
+
+	EProcess = 0;
+	found = FALSE;
+	found = FindProcessByID(id, &EProcess);
+	if( found ){
+
+		if ( ObOpenObjectByPointer( (PVOID)EProcess, 0, NULL, 0, NULL, KernelMode, &ProcessHandle) != STATUS_SUCCESS)
+			return;
+		ZwTerminateProcess( (HANDLE)ProcessHandle, STATUS_SUCCESS);
+		ZwClose( (HANDLE)ProcessHandle );
+	}
 }
 
-*/
 
 void GetProcessString(ULONG id,  ULONG* pebAddress)
 {
@@ -276,14 +423,93 @@ void GetProcessString(ULONG id,  ULONG* pebAddress)
 	found = FALSE;
 	found = FindProcessByID(id, &EProcess);
 	if( found ){
-		DbgPrint("[ring0] process %d found! EPROCESS is 0x%x", id, EProcess);
+		//DbgPrint("[ring0] process %d found! EPROCESS is 0x%x", id, EProcess);
 		*pebAddress = *((ULONG*)(EProcess+GetPlantformDependentInfo(PEB_OFFSET)));
 		
 	}else{
-		DbgPrint("[ring0] do not found %d", id);
+		//DbgPrint("[ring0] do not found %d", id);
 		*pebAddress = 0;
 	}
 
-	DbgPrint("[ring0] pebAddress %d", *pebAddress);
+	//DbgPrint("[ring0] pebAddress %d", *pebAddress);
 }
 
+//更多解释请看 http://www.cnblogs.com/gussing/archive/2009/07/01/1514925.html
+BOOL YasiReadProcessMemory(ULONG id, PVOID BaseAddress, PVOID Buffer, ULONG size, ULONG* bytesRead)
+{
+	ULONG           EProcess;
+	BOOL			found;
+	PMDL			mdl;
+	PVOID			SystemAddress;
+	found = FindProcessByID(id, &EProcess);
+	if( !found ) return FALSE;
+	if( BaseAddress == NULL || size == 0 ) return FALSE;
+	mdl = MmCreateMdl(NULL, Buffer, size);
+	MmProbeAndLockPages(mdl, UserMode, IoWriteAccess);
+	KeAttachProcess((PEPROCESS)EProcess);
+	SystemAddress = MmGetSystemAddressForMdl(mdl);
+	if( MmIsAddressValid(BaseAddress) && MmIsAddressValid((char*)BaseAddress+size-1) ) 
+		memcpy(SystemAddress, BaseAddress, size);
+	KeDetachProcess((PEPROCESS)EProcess);
+
+	if( mdl->MappedSystemVa != NULL ){
+		MmUnmapLockedPages(mdl->MappedSystemVa, mdl);
+	}
+	MmUnlockPages(mdl);
+	ExFreePool(mdl);
+	*bytesRead = size;
+	return TRUE;
+}
+BOOL YasiWriteProcessMemory(ULONG id, PVOID BaseAddress,PVOID Buffer, ULONG size, ULONG * bytesRead)
+{
+	ULONG           EProcess;
+	BOOL			found;
+	PMDL			mdl;
+	PVOID			SystemAddress;
+	ULONG			CR0VALUE;
+	KIRQL			Irql;
+
+	found = FindProcessByID(id, &EProcess);
+	if( !found ) return FALSE;
+	if( BaseAddress == NULL || size == 0 ) return FALSE;
+
+	mdl = MmCreateMdl(NULL, Buffer, size);
+	MmProbeAndLockPages(mdl, UserMode, IoReadAccess);
+	KeAttachProcess((PEPROCESS)EProcess);
+	SystemAddress = MmGetSystemAddressForMdl(mdl);
+	if( MmIsAddressValid(BaseAddress) && MmIsAddressValid((char*)BaseAddress+size-1) ) {
+		//关闭内存写保护
+		_asm
+		{
+			push eax
+			mov eax, cr0
+			mov CR0VALUE, eax
+			and eax, 0fffeffffh
+			mov cr0, eax
+			pop eax
+		}
+		Irql=KeRaiseIrqlToDpcLevel();
+		//DbgPrint("[ring0] BaseAddress 0x%x, SystemAddress 0x%x",BaseAddress,SystemAddress);
+		memcpy(BaseAddress, SystemAddress, size);
+		//恢复Irql
+		KeLowerIrql(Irql);
+		//开启内存写保护
+		__asm
+		{      
+			push eax
+			mov eax, CR0VALUE
+			mov cr0, eax
+			pop eax
+		}
+
+	}
+	KeDetachProcess((PEPROCESS)EProcess);
+
+	if( mdl->MappedSystemVa != NULL ){
+		MmUnmapLockedPages(mdl->MappedSystemVa, mdl);
+	}
+	MmUnlockPages(mdl);
+	ExFreePool(mdl);
+	*bytesRead = size;
+	return TRUE;
+}

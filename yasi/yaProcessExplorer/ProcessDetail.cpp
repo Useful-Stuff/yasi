@@ -83,6 +83,7 @@ void CProcessDetail::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_ADDRESS, m_Address);
 	DDX_Control(pDX, IDC_EDIT_FUNC, m_Func);
 	DDX_Control(pDX, IDC_COMBO_IORE, m_IorE);
+	DDX_Control(pDX, IDC_BUTTON_WRITE, m_BtnWrite);
 }
 
 BOOL CProcessDetail::OnInitDialog()
@@ -92,6 +93,7 @@ BOOL CProcessDetail::OnInitDialog()
 	m_IorE.AddString(_T("import table"));
 	m_IorE.AddString(_T("export table"));
 	m_IorE.SetCurSel(0);
+	m_BtnWrite.EnableWindow(FALSE);
 
 	DWORD oldStyle = LVS_REPORT;
 	m_LoadedDlls.ModifyStyle(LVS_TYPEMASK,oldStyle);
@@ -140,6 +142,7 @@ BEGIN_MESSAGE_MAP(CProcessDetail, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_WRITE, &CProcessDetail::OnBnClickedButtonWrite)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_DLLS, &CProcessDetail::OnNMClickListDlls)
 	ON_BN_CLICKED(IDC_BUTTON_LOAD, &CProcessDetail::OnBnClickedButtonLoad)
+	ON_CBN_SELCHANGE(IDC_COMBO_IORE, &CProcessDetail::OnCbnSelchangeComboIore)
 END_MESSAGE_MAP()
 
 
@@ -425,4 +428,14 @@ void CProcessDetail::OnBnClickedButtonLoad()
 		return;
 
 	yasi_load_dll(core, pid, path.GetBuffer());
+}
+
+void CProcessDetail::OnCbnSelchangeComboIore()
+{
+	CString ioreS;
+	m_IorE.GetWindowText(ioreS);
+	if( ioreS == "import table" )
+		m_BtnWrite.EnableWindow(TRUE);
+	else
+		m_BtnWrite.EnableWindow(FALSE);
 }
