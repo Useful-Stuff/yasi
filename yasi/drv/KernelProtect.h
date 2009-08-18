@@ -42,7 +42,8 @@ enum
 	CMD_KILL_PROCESS,
 	CMD_GET_PROCESS_STRING,
 	CMD_READ_PROCESS_MEMORY,
-	CMD_WRITE_PROCESS_MEMORY
+	CMD_WRITE_PROCESS_MEMORY,
+	CMD_GET_THREAD_DETAIL
 
 };
 
@@ -66,10 +67,37 @@ struct PROCESS_RECORD
 	UCHAR imageName[16];
 };
 
+struct EPROCESS_WAPPER
+{
+#ifdef XP_SP3
+	EPROCESS_XP_SP3 process;
+#else
+#endif
+};
+
+struct ETHREAD_WAPPER
+{
+#ifdef XP_SP3
+	ETHREAD_XP_SP3 thread;
+#else
+#endif
+};
+
 struct PROCESS_DETAIL
 {
 	WCHAR fullName[128];
+#ifdef XP_SP3
 	EPROCESS_XP_SP3 process;
+#else
+#endif
+};
+
+struct THREAD_DETAIL
+{
+#ifdef XP_SP3
+	ETHREAD_XP_SP3 thread;
+#else
+#endif
 };
 
 NTSTATUS KernelProtect_Create(PDEVICE_OBJECT DeviceObject, PIRP Irp);
@@ -88,6 +116,7 @@ void KillProcess(ULONG id);
 void GetProcessString(ULONG id,  ULONG* str);
 BOOL YasiReadProcessMemory(ULONG id, PVOID lpBaseAddress, PVOID lpBuffer, ULONG size, ULONG* bytesRead);
 BOOL YasiWriteProcessMemory(ULONG id, PVOID lpBaseAddress,PVOID lpBuffer, ULONG nSize, ULONG * lpNumberOfBytesWritten);
+BOOL GetThreadDetail(ULONG pid, ULONG thread_idx, struct THREAD_DETAIL* detail);
 
 enum
 {

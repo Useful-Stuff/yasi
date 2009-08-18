@@ -499,3 +499,30 @@ BOOL yasi_write_process_memory(YASI_HANDLE h, ULONG processID, PVOID lpBaseAddre
 
 	return ret;
 }
+
+ULONG yasi_get_thread_count(YASI_HANDLE h, ULONG processID)
+{
+	PROCESS_DETAIL detail = {0};
+	yasi_get_process_detail(h, processID, &detail);
+	return detail.process.ActiveThreads;
+}
+
+void yasi_get_thread_detail(YASI_HANDLE h, ULONG processID, ULONG threadIndex, THREAD_DETAIL* detail)
+{
+	DWORD dwReturn;
+	ULONG total_len = sizeof(ULONG) + sizeof(ULONG) + sizeof(ULONG)*2;
+	CMD_RECORD* cmd = (CMD_RECORD*)malloc(total_len);
+	memset(cmd, 0, total_len);
+	cmd->op = CMD_GET_THREAD_DETAIL;
+	cmd->total_len = total_len;
+	ULONG* tmp = (ULONG*)(&(cmd->param[0]));
+	*tmp = (ULONG)processID;
+	tmp++;
+	*tmp = (ULONG)threadIndex;
+
+	BOOL ret = DeviceIoControl(h, IOCTL_CMD_READ, cmd, total_len, detail, sizeof(THREAD_DETAIL), &dwReturn, NULL);
+
+	free(cmd);
+
+	return;
+}

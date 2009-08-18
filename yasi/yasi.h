@@ -34,7 +34,8 @@ enum
 	CMD_KILL_PROCESS,
 	CMD_GET_PROCESS_STRING,
 	CMD_READ_PROCESS_MEMORY,
-	CMD_WRITE_PROCESS_MEMORY
+	CMD_WRITE_PROCESS_MEMORY,
+	CMD_GET_THREAD_DETAIL
 
 };
 
@@ -65,6 +66,14 @@ struct PROCESS_DETAIL
 	EPROCESS_XP_SP3 process;
 #else
 
+#endif
+};
+
+struct THREAD_DETAIL
+{
+#ifdef XP_SP3
+	ETHREAD_XP_SP3 thread;
+#else
 #endif
 };
 
@@ -110,6 +119,9 @@ DllExport BOOL yasi_write_process_memory(YASI_HANDLE h, ULONG processID, PVOID l
 //3。 *(ULONG *)(JmpAddress+1)=(ULONG)MyFuncAddress-((ULONG)DestFuncAddress+5);
 //4.  yasi_write_process_memory(core, pid, (BYTE *)DestFuncAddress,JmpAddress,5);
 //但是我不提供现成的方法
+
+DllExport ULONG yasi_get_thread_count(YASI_HANDLE h, ULONG processID);
+DllExport void yasi_get_thread_detail(YASI_HANDLE h, ULONG processID, ULONG threadIndex, THREAD_DETAIL* detail);
 
 #ifdef __cplusplus
 };

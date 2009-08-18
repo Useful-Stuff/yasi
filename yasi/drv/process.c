@@ -109,7 +109,7 @@ ULONG GetProcessCount()
     do
     {
         dwCount++;
-        DbgPrint("[ring0] [Pid=%6d] %s\n", *((ULONG *)(EProcess + dwPIdOffset)), (PUCHAR)(EProcess + dwPNameOffset));
+        //DbgPrint("[ring0] [Pid=%6d] %s\n", *((ULONG *)(EProcess + dwPIdOffset)), (PUCHAR)(EProcess + dwPNameOffset));
         ActiveProcessLinks = (LIST_ENTRY *)(EProcess + dwPLinkOffset);
         EProcess = (ULONG)ActiveProcessLinks->Flink - dwPLinkOffset;
         if (EProcess == FirstProcess)
@@ -241,6 +241,9 @@ KeInitializeApc(
 				IN KPROCESSOR_MODE  Mode,
 				IN PVOID  Context);
 
+ULONG _stdcall
+KeForceResumeThread(PKTHREAD Thread);
+
 
 NTSTATUS PspTerminateThreadByPointer(PETHREAD Thread, NTSTATUS status);
 typedef VOID (*MyPspExitThread)(NTSTATUS status);
@@ -275,7 +278,7 @@ ULONG GetPspTerminateThreadByPointer()
 							PsTerminateSystemThreadAddr += 5;
 							dwAddr = *(ULONG *)PsTerminateSystemThreadAddr + (ULONG)PsTerminateSystemThreadAddr +4;
 
-							//DbgPrint("PspTerminateThreadByPointer:: 0x%x ",dwAddr);
+							DbgPrint("[ring0] PspTerminateThreadByPointer:: 0x%x ",dwAddr);
 							return dwAddr;
 							//break;
 					}
@@ -288,28 +291,23 @@ ULONG GetPspTerminateThreadByPointer()
 PVOID GetPspExitThread()
 
 {
-
-	ULONG sPtr;
-
-	sPtr = (ULONG)GetPspTerminateThreadByPointer();
-
-	while ( sPtr < (ULONG)GetPspTerminateThreadByPointer() + 0x45 ) //0x45 = 本机上 PspTerminateThreadByPointer 肥胖程度
-
+#ifdef XP_SP3
+	char* sPtr;
+	ULONG end = (ULONG)GetPspTerminateThreadByPointer() + 0x60;
+	sPtr = (char*)GetPspTerminateThreadByPointer();
+	while ( (ULONG)sPtr <  end) //0x60 = 本机上 PspTerminateThreadByPointer 肥胖程度
 	{
-
+		//DbgPrint("[ring0] addr: 0x%x, val: 0x%x", sPtr, *(WORD*)sPtr);
 		if ( *(WORD*)sPtr == 3189 )
-
 		{
-
 			return (PVOID)(*(ULONG*)(sPtr + 3) + sPtr + 7);        
-
 		}
-
 		sPtr ++;
-
 	}
-
 	return NULL;
+#else
+	return NULL;
+#endif
 
 }
 
@@ -327,7 +325,17 @@ PiTerminateThreadKernelRoutine(PKAPC Apc,
 							   PVOID* SystemArgument1,
 							   PVOID* SystemArguemnt2)
 {
+#ifdef XP_SP3
+	PETHREAD_XP_SP3 current;
+	MyPspExitThread myExitThread = (MyPspExitThread)GetPspExitThread();
 	ExFreePool(Apc);
+	//DbgPrint("[ring0] myExitThread is 0x%x", myExitThread);
+	current = (PETHREAD_XP_SP3)PsGetCurrentThread();
+	//能杀360
+	if( myExitThread )
+		myExitThread(STATUS_SUCCESS);
+#else
+#endif
 }
 
 VOID _stdcall
@@ -335,9 +343,7 @@ PiTerminateThreadNormalRoutine(PVOID NormalContext,
 							   PVOID SystemArgument1,
 							   PVOID SystemArgument2)
 {
-	MyPspExitThread  exitThread = (MyPspExitThread)GetPspExitThread();
-	if( exitThread )
-		exitThread(STATUS_SUCCESS);
+	//ExFreePool(Apc);
 }
 
 
@@ -349,8 +355,9 @@ void KillProcessByAPC(ULONG id)
 	ULONG           EProcess;
 	KIRQL			oldLvl;
 	PLIST_ENTRY		current_entry;
-	PETHREAD		current;
+	
 #ifdef XP_SP3
+	PETHREAD_XP_SP3		current;
 	PEPROCESS_XP_SP3 Process;
 #else
 	PEPROCESS		Process;
@@ -361,35 +368,37 @@ void KillProcessByAPC(ULONG id)
 	if( found ){
 #ifdef XP_SP3
 		Process = (PEPROCESS_XP_SP3 )EProcess;
-#else
-		Process = (PEPROCESS)EProcess;
-#endif 
 		KeInitializeSpinLock(&PiThreadListLock);
 		Process->ExitStatus = STATUS_SUCCESS;
 		KeAcquireSpinLock(&PiThreadListLock, &oldLvl);
 		current_entry = Process->ThreadListHead.Flink;
 		while( current_entry != &Process->ThreadListHead ){
-			current = (PETHREAD)((ULONG)current_entry - GetPlantformDependentInfo(PorcessThreadListEntry_OFFSET));
-			if( current != PsGetCurrentThread()){
+			current = CONTAINING_RECORD(current_entry, ETHREAD_XP_SP3, ThreadListEntry);
+			//current = (PETHREAD_XP_SP3)((ULONG)current_entry - GetPlantformDependentInfo(PorcessThreadListEntry_OFFSET));
+			if( current != PsGetCurrentThread() ){
 				KeReleaseSpinLock(&PiThreadListLock, oldLvl);
-				*((ULONG*)((ULONG)current+GetPlantformDependentInfo(ThreadExitStatus_OFFSET))) = STATUS_SUCCESS;
+				current->u2.ExitStatus = STATUS_SUCCESS;
+				//*((ULONG*)((ULONG)current+GetPlantformDependentInfo(ThreadExitStatus_OFFSET))) = STATUS_SUCCESS;
 				Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), 1001);
-				KeInitializeApc(Apc, (PKTHREAD)((ULONG)current),
+				KeInitializeApc(Apc, (PKTHREAD)&current->Tcb,
 					0, 
 					PiTerminateThreadKernelRoutine,
-					PiTerminateThreadRundownRoutine,
-					PiTerminateThreadNormalRoutine,
+					NULL,
+					NULL,
 					KernelMode, NULL
 					);
 				//此处会死锁,估计是current算得不对
 				KeInsertQueueApc(Apc, NULL, NULL, IO_NO_INCREMENT);
 				KeAcquireSpinLock(&PiThreadListLock, &oldLvl);
-				current_entry = Process->ThreadListHead.Flink;
+				//KeForceResumeThread((PKTHREAD)&current->Tcb);
+				current_entry =  current_entry->Flink;
 			}else{
 				current_entry = current_entry->Flink;
 			}
 		}
 		KeReleaseSpinLock(&PiThreadListLock, oldLvl);
+#else
+#endif
 	}
 }
 
@@ -400,7 +409,7 @@ void KillProcess(ULONG id)
 	ULONG           EProcess;
 	PVOID                ProcessHandle;
 
-	//return KillProcessByAPC(id);
+	return KillProcessByAPC(id);
 
 	EProcess = 0;
 	found = FALSE;
@@ -511,5 +520,40 @@ BOOL YasiWriteProcessMemory(ULONG id, PVOID BaseAddress,PVOID Buffer, ULONG size
 	MmUnlockPages(mdl);
 	ExFreePool(mdl);
 	*bytesRead = size;
+	return TRUE;
+}
+
+BOOL GetThreadDetail(ULONG id, ULONG thread_idx, struct THREAD_DETAIL* detail)
+{
+	BOOL 			found;
+	ULONG           EProcess;
+	struct EPROCESS_WAPPER* pEprocess;
+	LIST_ENTRY		threadHeader;
+	LIST_ENTRY*		currentThread;
+	ULONG			count = 0;
+	struct ETHREAD_WAPPER*	pEThread;
+	EProcess = 0;
+	found = FALSE;
+	//DbgPrint("[ring0] id is %d, index is %d", id, thread_idx);
+	found = FindProcessByID(id, &EProcess);
+	if( found ){
+		//DbgPrint("[ring0] found process, EProcess is 0x%x!", EProcess);
+		pEprocess = (struct ETHREAD_WAPPER*)EProcess;
+		threadHeader = pEprocess->process.ThreadListHead;
+		currentThread = threadHeader.Flink;
+		if( currentThread == &threadHeader )
+			return FALSE;
+		while( count < thread_idx )
+		{
+			currentThread = currentThread->Flink;
+			count++;
+			if( currentThread == &threadHeader )
+				return FALSE;
+		}
+
+		//DbgPrint("[ring0] found thread, current thread address 0x%x!", currentThread);
+		pEThread = (struct ETHREAD_WAPPER*)CONTAINING_RECORD(currentThread, ETHREAD_XP_SP3, ThreadListEntry);
+		memcpy(&detail->thread, &pEThread->thread, sizeof(struct ETHREAD_WAPPER));
+	}
 	return TRUE;
 }

@@ -485,4 +485,207 @@ typedef struct _LDR_DATA_TABLE_ENTRY_XP_SP3 {
 	PVOID PatchInformation;
 } LDR_DATA_TABLE_ENTRY_XP_SP3, *PLDR_DATA_TABLE_ENTRY_XP_SP3;
 
+typedef struct _KAPC_STATE_XP_SP3
+{
+	LIST_ENTRY ApcListHead[2];//+0x000
+	PVOID	Process;//+0x010
+	char	KernelApcInProgress;//+0x014
+	char	KernelApcPending;//+0x015
+	char	UserApcPending;//+0x016
+	char	useless;
+}KAPC_STATE_XP_SP3, *PKAPC_STATE_XP_SP3;
+
+typedef struct _KAPC_XP_SP3
+{
+	unsigned short	Type;//+0x000
+	unsigned short	Size;//+0x002
+	ULONG	Spare0;//+0x004
+	PVOID	Thread;//+0x008
+	LIST_ENTRY	ApcListEntry;//+0x00c
+	PVOID	KernelRoutine;//+0x014
+	PVOID	RundownRoutine;//+0x018
+	PVOID	NormalRoutine;//+0x01c
+	PVOID	NormalContext;//+0x020
+	PVOID	SystemArgument1;//+0x024
+	PVOID	SystemArgument2;//+0x028
+	char	ApcStateIndex;//+0x02c
+	char	ApcMode;//+0x02d
+	char	Inserted;//+0x02e
+	char	useless;
+}KAPC_XP_SP3, *PKAPC_XP_SP3;
+
+typedef struct _KWAIT_BLOCK_XP_SP3
+{
+	LIST_ENTRY	WaitListEntry;//+0x000
+	PVOID	Thread;//+0x008
+	PVOID	Object;//+0x00c
+	PVOID	NextWaitBlock;//+0x010
+	unsigned short	WaitKey;//+0x014
+	unsigned short	WaitType;//+0x016
+}KWAIT_BLOCK_XP_SP3, *PKWAIT_BLOCK_XP_SP3;
+
+typedef struct _KTIMER_XP_SP3
+{
+	DISPATCHER_HEADER_XP_SP3	Header;//+0x000
+	ULARGE_INTEGER	DueTime;//+0x010
+	LIST_ENTRY	TimerListEntry;//+0x018
+	PVOID	Dpc;//+0x020
+	int	Period;//+0x024
+
+}KTIMER_XP_SP3, *PKTIMER_XP_SP3;
+
+typedef struct _KSEMAPHORE_XP_SP3
+{
+	DISPATCHER_HEADER_XP_SP3	Header;//+0x000
+	int	Limit;//+0x010
+
+}KSEMAPHORE_XP_SP3, *PKSEMAPHORE_XP_SP3;
+
+typedef struct _KTHREAD_XP_SP3
+{
+	DISPATCHER_HEADER_XP_SP3	Header;//+0x000
+	LIST_ENTRY	MutantListHead;//+0x010
+	PVOID	InitialStack;//+0x018
+	PVOID	StackLimit;//+0x01c
+	PVOID	Teb;//+0x020
+	PVOID	TlsArray;//+0x024
+	PVOID	KernelStack;//+0x028
+	char	DebugActive;//+0x02c
+	char	State;//+0x02d
+	char	Alerted[2];//+0x02e
+	char	Iopl;//+0x030
+	char	NpxState;//+0x031
+	char	Saturation;//+0x032
+	char	Priority;//+0x033
+	KAPC_STATE_XP_SP3	ApcState;//+0x034
+	ULONG	ContextSwitches;//+0x04c
+	char	IdleSwapBlock;//+0x050
+	char	Spare0[3];//+0x051
+	int	WaitStatus;//+0x054
+	char	WaitIrql;//+0x058
+	char	WaitMode;//+0x059
+	char	WaitNext;//+0x05a
+	char	WaitReason;//+0x05b
+	PVOID	WaitBlockList;//+0x05c
+	union{
+		LIST_ENTRY	WaitListEntry;//+0x060
+		SINGLE_LIST_ENTRY	SwapListEntry;//+0x060
+	}u1;
+	ULONG	WaitTime;//+0x068
+	char	BasePriority;//+0x06c
+	char	DecrementCount;//+0x06d
+	char	PriorityDecrement;//+0x06e
+	char	Quantum;//+0x06f
+	KWAIT_BLOCK_XP_SP3	WaitBlock[4];//+0x070
+	PVOID	LegoData;//+0x0d0
+	ULONG	KernelApcDisable;//+0x0d4
+	ULONG	UserAffinity;//+0x0d8
+	char	SystemAffinityActive;//+0x0dc
+	char	PowerState;//+0x0dd
+	char	NpxIrql;//+0x0de
+	char	InitialNode;//+0x0df
+	PVOID	ServiceTable;//+0x0e0
+	PVOID	Queue;//+0x0e4
+	ULONG	ApcQueueLock[2];//+0x0e8
+	KTIMER_XP_SP3	Timer;//+0x0f0
+	LIST_ENTRY	QueueListEntry;//+0x118
+	ULONG	SoftAffinity;//+0x120
+	ULONG	Affinity;//+0x124
+	char	Preempted;//+0x128
+	char	ProcessReadyQueue;//+0x129
+	char	KernelStackResident;//+0x12a
+	char	NextProcessor;//+0x12b
+	PVOID	CallbackStack;//+0x12c
+	PVOID	Win32Thread;//+0x130
+	PVOID	TrapFrame;//+0x134
+	PVOID	ApcStatePointer[2];//+0x138
+	char	PreviousMode;//+0x140
+	char	EnableStackSwap;//+0x141
+	char	LargeStack;//+0x142
+	char	ResourceIndex;//+0x143
+	ULONG	KernelTime;//+0x144
+	ULONG	UserTime;//+0x148
+	KAPC_STATE_XP_SP3	SavedApcState;//+0x14c
+	char	Alertable;//+0x164
+	char	ApcStateIndex;//+0x165
+	char	ApcQueueable;//+0x166
+	char	AutoAlignment;//+0x167
+	PVOID	StackBase;//+0x168
+	KAPC_XP_SP3	SuspendApc;//+0x16c
+	KSEMAPHORE_XP_SP3	SuspendSemaphore;//+0x19c
+	LIST_ENTRY	ThreadListEntry;//+0x1b0
+	char	FreezeCount;//+0x1b8
+	char	SuspendCount;//+0x1b9
+	char	IdealProcessor;//+0x1ba
+	char	DisableBoost;//+0x1bb
+	UINT	useless;
+}KTHREAD_XP_SP3, *PKTHREAD_XP_SP3;
+
+typedef struct _CLIENT_ID_XP_SP3
+{
+	PVOID	UniqueProcess;//+0x000
+	PVOID	UniqueThread;//+0x004
+}CLIENT_ID_XP_SP3, *PCLIENT_ID_XP_SP3;
+
+typedef struct _EX_RUNDOWN_REF_XP_SP3
+{
+	union{
+		ULONG	Count;//+0x000
+		PVOID	Ptr;//+0x000
+	}u;
+}EX_RUNDOWN_REF_XP_SP3, *PEX_RUNDOWN_REF_XP_SP3;
+
+typedef struct _ETHREAD_XP_SP3
+{
+	KTHREAD_XP_SP3	Tcb;//+0x000
+	LARGE_INTEGER	CreateTime;//+0x1c0
+	union{
+		LARGE_INTEGER	ExitTime;//+0x1c8
+		LIST_ENTRY	LpcReplyChain;//+0x1c8
+		LIST_ENTRY	KeyedWaitChain;//+0x1c8
+	}u1;
+	union{
+		int	ExitStatus;//+0x1d0
+		PVOID	OfsChain;//+0x1d0
+	}u2;
+	LIST_ENTRY	PostBlockList;//+0x1d4
+	union{
+		PVOID	TerminationPort;//+0x1dc
+		PVOID	ReaperLink;//+0x1dc
+		PVOID	KeyedWaitValue;//+0x1dc
+	}u3;
+	ULONG	ActiveTimerListLock;//+0x1e0
+	LIST_ENTRY	ActiveTimerListHead;//+0x1e4
+	CLIENT_ID_XP_SP3	Cid;//+0x1ec
+	union{
+		KSEMAPHORE_XP_SP3	LpcReplySemaphore;//+0x1f4
+		KSEMAPHORE_XP_SP3	KeyedWaitSemaphore;//+0x1f4
+	}u4;
+	union{
+		PVOID	LpcReplyMessage;//+0x208
+		PVOID	LpcWaitingOnPort;//+0x208
+	}u5;
+	PVOID	ImpersonationInfo;//+0x20c
+	LIST_ENTRY	IrpList;//+0x210
+	ULONG	TopLevelIrp;//+0x218
+	PVOID	DeviceToVerify;//+0x21c
+	PVOID	ThreadsProcess;//+0x220
+	PVOID	StartAddress;//+0x224
+	union{
+		PVOID	Win32StartAddress;//+0x228
+		ULONG	LpcReceivedMessageId;//+0x228
+	}u6;
+	LIST_ENTRY	ThreadListEntry;//+0x22c
+	EX_RUNDOWN_REF_XP_SP3	RundownProtect;//+0x234
+	PVOID	ThreadLock;//+0x238
+	ULONG	LpcReplyMessageId;//+0x23c
+	ULONG	ReadClusterSize;//+0x240
+	ULONG	GrantedAccess;//+0x244
+	ULONG	CrossThreadFlags;//+0x248
+	ULONG	SameThreadPassiveFlags;//+0x24c
+	ULONG	SameThreadApcFlags;//+0x250
+	char	ForwardClusterOnly;//+0x254
+	char	DisablePageFaultClustering;//+0x255;
+} ETHREAD_XP_SP3, *PETHREAD_XP_SP3;
+
 #pragma  pack ()
