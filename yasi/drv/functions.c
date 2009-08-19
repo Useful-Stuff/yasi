@@ -125,6 +125,7 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	ULONG				size;
 	ULONG				bytesProcessed;
 	ULONG				threadIndex;
+	ULONG				threadID;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
     inBufLength = irpStack->Parameters.DeviceIoControl.InputBufferLength;
     outBufLength = irpStack->Parameters.DeviceIoControl.OutputBufferLength;
@@ -162,6 +163,12 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				processID = *((ULONG*)&cmd->param[0]); 
 		        Irp->IoStatus.Information = 1;
 				KillProcess(processID);
+				break;
+			case CMD_KILL_THREAD:
+				tmp = (ULONG*)&cmd->param[0];
+				processID = *tmp;
+				threadID = *(++tmp);
+				KillThread(processID, threadID);
 				break;
 				
 			case CMD_GET_PROCESS_STRING:

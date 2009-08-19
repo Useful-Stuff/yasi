@@ -218,6 +218,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\ThreadDetail.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\yaProcessExplorer.cpp"
 				>
 			</File>
@@ -241,6 +245,10 @@
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ThreadDetail.h"
 				>
 			</File>
 			<File

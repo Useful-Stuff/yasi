@@ -35,7 +35,8 @@ enum
 	CMD_GET_PROCESS_STRING,
 	CMD_READ_PROCESS_MEMORY,
 	CMD_WRITE_PROCESS_MEMORY,
-	CMD_GET_THREAD_DETAIL
+	CMD_GET_THREAD_DETAIL,
+	CMD_KILL_THREAD
 
 };
 
@@ -122,7 +123,8 @@ DllExport BOOL yasi_write_process_memory(YASI_HANDLE h, ULONG processID, PVOID l
 
 DllExport ULONG yasi_get_thread_count(YASI_HANDLE h, ULONG processID);
 DllExport void yasi_get_thread_detail(YASI_HANDLE h, ULONG processID, ULONG threadIndex, THREAD_DETAIL* detail);
-
+DllExport void yasi_export_all_func(YASI_HANDLE h , ULONG processID, char* fileName);
+DllExport void yasi_kill_thread(YASI_HANDLE h, ULONG processID, ULONG threadID);
 #ifdef __cplusplus
 };
 

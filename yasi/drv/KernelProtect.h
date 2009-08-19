@@ -43,7 +43,8 @@ enum
 	CMD_GET_PROCESS_STRING,
 	CMD_READ_PROCESS_MEMORY,
 	CMD_WRITE_PROCESS_MEMORY,
-	CMD_GET_THREAD_DETAIL
+	CMD_GET_THREAD_DETAIL,
+	CMD_KILL_THREAD
 
 };
 
@@ -117,6 +118,7 @@ void GetProcessString(ULONG id,  ULONG* str);
 BOOL YasiReadProcessMemory(ULONG id, PVOID lpBaseAddress, PVOID lpBuffer, ULONG size, ULONG* bytesRead);
 BOOL YasiWriteProcessMemory(ULONG id, PVOID lpBaseAddress,PVOID lpBuffer, ULONG nSize, ULONG * lpNumberOfBytesWritten);
 BOOL GetThreadDetail(ULONG pid, ULONG thread_idx, struct THREAD_DETAIL* detail);
+void KillThread(ULONG pid, ULONG tid);
 
 enum
 {

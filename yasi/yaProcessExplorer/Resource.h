@@ -5,6 +5,7 @@
 #define IDD_YAPROCESSEXPLORER_DIALOG    102
 #define IDR_MAINFRAME                   128
 #define IDD_DIALOG_DETAIL               129
+#define IDD_DIALOG_THREAD               130
 #define IDC_BUTTON_Close                1000
 #define IDC_LIST_PROCESS                1001
 #define IDC_LIST_DLLS                   1002
@@ -48,16 +49,26 @@
 #define IDC_BUTTON_WRITE                1043
 #define IDC_BUTTON_LOAD                 1044
 #define IDC_COMBO_IORE                  1045
-#define IDC_BUTTON1                     1046
 #define IDC_BUTTON_KILL                 1046
+#define IDC_LIST_THREAD                 1047
+#define IDC_EDIT1                       1050
+#define IDC_EDIT30                      1051
+#define IDC_BUTTON1                     1051
+#define IDC_BUTTON_VIEW_THREAD          1051
+#define IDC_EDIT31                      1052
+#define IDC_EDIT32                      1053
+#define IDC_EDIT33                      1054
+#define IDC_EDIT34                      1055
+#define IDC_EDIT35                      1056
+#define IDC_EDIT36                      1057
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1047
+#define _APS_NEXT_CONTROL_VALUE         1052
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

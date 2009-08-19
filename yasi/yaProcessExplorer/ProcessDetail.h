@@ -105,4 +105,5 @@ private:
 	CComboBox m_IorE;
 	afx_msg void OnCbnSelchangeComboIore();
 	CButton m_BtnWrite;
+	afx_msg void OnBnClickedButtonViewThread();
 };

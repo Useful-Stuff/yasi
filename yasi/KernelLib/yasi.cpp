@@ -526,3 +526,114 @@ void yasi_get_thread_detail(YASI_HANDLE h, ULONG processID, ULONG threadIndex, T
 
 	return;
 }
+
+
+void yasi_export_all_func(YASI_HANDLE h , ULONG processID, char* fileName)
+{
+	ULONG distance = 0xffffffff;
+	FILE* file = fopen(fileName, "wb");
+	if( file == NULL )
+		return;
+
+	ULONG dllBase = NULL;
+	BOOL found = FALSE;
+	UINT count = yasi_get_module_count(h, processID);
+	for( int index = 0 ; index < count; index++ )
+	{
+		LDR_DATA_TABLE_ENTRY_XP_SP3 info = {0};
+		yasi_get_module_info(h, processID, index, &info);
+		wchar_t dllname[256] = {0};
+		yasi_get_process_string(h, processID, info.BaseDllName.Buffer, dllname, info.BaseDllName.Length);
+		dllBase = (ULONG)info.DllBase;
+		
+
+
+
+
+
+		IMAGE_DOS_HEADER dosHeader = {0};
+		yasi_read_process_memory(h, processID, (PVOID)dllBase, &dosHeader, sizeof(IMAGE_DOS_HEADER), NULL);
+		IMAGE_NT_HEADERS ntHeader = {0};
+		yasi_read_process_memory(h, processID, (PVOID)(dllBase+dosHeader.e_lfanew), &ntHeader, sizeof(IMAGE_NT_HEADERS), NULL);
+		IMAGE_OPTIONAL_HEADER optionalHeader = ntHeader.OptionalHeader;
+		IMAGE_DATA_DIRECTORY dataDirectory = optionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+		//yasi_read_process_memory(h, processID, (PVOID)(optionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress), &dataDirectory,
+		//	sizeof( IMAGE_DATA_DIRECTORY), NULL);
+		IMAGE_EXPORT_DIRECTORY ExportDirectory = {0};
+		yasi_read_process_memory(h, processID, (PVOID)(dllBase + dataDirectory.VirtualAddress), &ExportDirectory, sizeof(ExportDirectory), NULL);
+		//some code comes from http://bbs.pediy.com/showthread.php?t=58199
+		PULONG NameTableBase = (PULONG)((PCHAR)dllBase + (ULONG)ExportDirectory.AddressOfNames);
+		PUSHORT  NameOrdinalTableBase = (PUSHORT )((PCHAR)dllBase + (ULONG)ExportDirectory.AddressOfNameOrdinals);
+
+		ULONG Middle = 0;
+		ULONG High = ExportDirectory.NumberOfNames - 1;
+		ULONG Low = 0;
+		while (High >= Low) {
+			Middle = (Low + High) >> 1;
+			ULONG nameTableIndex = 0;
+			yasi_read_process_memory(h, processID, (PVOID)(NameTableBase+Low), &nameTableIndex, sizeof(ULONG), NULL);
+			PCHAR nameBase = (PCHAR)((ULONG)dllBase + (ULONG)nameTableIndex);
+			char tmpName[64] = {0};
+			yasi_read_process_memory(h, processID, (PVOID)(nameBase), tmpName, 64, NULL);
+			
+
+			USHORT OrdinalNumber = 0;
+			yasi_read_process_memory(h, processID, (PVOID)(NameOrdinalTableBase+Low), &OrdinalNumber, sizeof(USHORT), NULL);
+
+
+			if ((ULONG)OrdinalNumber >= ExportDirectory.NumberOfFunctions) {
+				return;
+			}
+
+			PULONG Addr = (PULONG)((PCHAR)dllBase + (ULONG)ExportDirectory.AddressOfFunctions);
+
+			PULONG FunctionAddress  = 0;
+			ULONG addrOffset = 0;
+			yasi_read_process_memory(h, processID, Addr+OrdinalNumber, &addrOffset, sizeof(ULONG), NULL);
+			FunctionAddress = (PULONG)(dllBase + addrOffset);
+
+			char cDllName[256] = {0};
+			wchar_t* itor = dllname;
+			char* cItor = cDllName;
+			while( itor != NULL && *itor != _T('\0')){
+				*cItor = (char)(*itor);
+				cItor++;
+				itor++;
+			}
+			*cItor = '\0';
+			fwrite(cDllName, (strlen(cDllName)+0), 1, file);
+			fwrite("||", 2, 1, file);
+			fwrite(tmpName, strlen(tmpName), 1, file);
+			fwrite("||", 2, 1, file);
+			char numTpm[32] = {0};
+			sprintf_s(numTpm, 32, "%d", FunctionAddress);
+			fwrite(numTpm, strlen(numTpm)+0, 1, file);
+			fwrite("\r\n", 2, 1, file);
+			Low++;
+		}
+	}
+	fflush(file);
+	fclose(file);
+
+}
+
+
+void yasi_kill_thread(YASI_HANDLE h, ULONG processID, ULONG threadID)
+{
+	DWORD dwReturn;
+	ULONG total_len = sizeof(ULONG) + sizeof(ULONG) + sizeof(ULONG)*2;
+	CMD_RECORD* cmd = (CMD_RECORD*)malloc(total_len);
+	memset(cmd, 0, total_len);
+	cmd->op = CMD_KILL_THREAD;
+	cmd->total_len = total_len;
+	ULONG* tmp = (ULONG*)(&(cmd->param[0]));
+	*tmp = (ULONG)processID;
+	tmp++;
+	*tmp = (ULONG)threadID;
+
+	BOOL ret = DeviceIoControl(h, IOCTL_CMD_READ, cmd, total_len, NULL, 0, &dwReturn, NULL);
+
+	free(cmd);
+
+	return;
+}

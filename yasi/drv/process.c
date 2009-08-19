@@ -278,7 +278,7 @@ ULONG GetPspTerminateThreadByPointer()
 							PsTerminateSystemThreadAddr += 5;
 							dwAddr = *(ULONG *)PsTerminateSystemThreadAddr + (ULONG)PsTerminateSystemThreadAddr +4;
 
-							DbgPrint("[ring0] PspTerminateThreadByPointer:: 0x%x ",dwAddr);
+							//DbgPrint("[ring0] PspTerminateThreadByPointer:: 0x%x ",dwAddr);
 							return dwAddr;
 							//break;
 					}
@@ -346,6 +346,21 @@ PiTerminateThreadNormalRoutine(PVOID NormalContext,
 	//ExFreePool(Apc);
 }
 
+void TerminateThreadByPointer(PKTHREAD tcb)
+{
+	PKAPC			Apc;
+	Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), 1001);
+	KeInitializeApc(Apc, (PKTHREAD)tcb,
+		0, 
+		PiTerminateThreadKernelRoutine,
+		NULL,
+		NULL,
+		KernelMode, NULL
+		);
+	//此处会死锁,估计是current算得不对
+	KeInsertQueueApc(Apc, NULL, NULL, IO_NO_INCREMENT);
+}
+
 
 void KillProcessByAPC(ULONG id)
 {
@@ -379,19 +394,52 @@ void KillProcessByAPC(ULONG id)
 				KeReleaseSpinLock(&PiThreadListLock, oldLvl);
 				current->u2.ExitStatus = STATUS_SUCCESS;
 				//*((ULONG*)((ULONG)current+GetPlantformDependentInfo(ThreadExitStatus_OFFSET))) = STATUS_SUCCESS;
-				Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), 1001);
-				KeInitializeApc(Apc, (PKTHREAD)&current->Tcb,
-					0, 
-					PiTerminateThreadKernelRoutine,
-					NULL,
-					NULL,
-					KernelMode, NULL
-					);
-				//此处会死锁,估计是current算得不对
-				KeInsertQueueApc(Apc, NULL, NULL, IO_NO_INCREMENT);
+				TerminateThreadByPointer((PKTHREAD)&current->Tcb);
 				KeAcquireSpinLock(&PiThreadListLock, &oldLvl);
 				//KeForceResumeThread((PKTHREAD)&current->Tcb);
 				current_entry =  current_entry->Flink;
+			}else{
+				current_entry = current_entry->Flink;
+			}
+		}
+		KeReleaseSpinLock(&PiThreadListLock, oldLvl);
+#else
+#endif
+	}
+}
+
+void KillThread(ULONG pid, ULONG tid)
+{
+	KSPIN_LOCK		PiThreadListLock;
+	PKAPC			Apc;
+	BOOL 			found;
+	ULONG           EProcess;
+	KIRQL			oldLvl;
+	PLIST_ENTRY		current_entry;
+
+#ifdef XP_SP3
+	PETHREAD_XP_SP3		current;
+	PEPROCESS_XP_SP3	Process;
+#else
+	PEPROCESS		Process;
+#endif
+	EProcess = 0;
+	found = FALSE;
+	found = FindProcessByID(pid, &EProcess);
+	if( found ){
+#ifdef XP_SP3
+		Process = (PEPROCESS_XP_SP3 )EProcess;
+		KeInitializeSpinLock(&PiThreadListLock);
+		KeAcquireSpinLock(&PiThreadListLock, &oldLvl);
+		current_entry = Process->ThreadListHead.Flink;
+		while( current_entry != &Process->ThreadListHead ){
+			current = CONTAINING_RECORD(current_entry, ETHREAD_XP_SP3, ThreadListEntry);
+			//current = (PETHREAD_XP_SP3)((ULONG)current_entry - GetPlantformDependentInfo(PorcessThreadListEntry_OFFSET));
+			if( current != PsGetCurrentThread() && (ULONG)current->Cid.UniqueThread == tid){
+				KeReleaseSpinLock(&PiThreadListLock, oldLvl);
+				current->u2.ExitStatus = STATUS_SUCCESS;
+				TerminateThreadByPointer((PKTHREAD)&current->Tcb);
+				break;
 			}else{
 				current_entry = current_entry->Flink;
 			}
