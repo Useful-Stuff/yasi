@@ -99,7 +99,7 @@ NTSTATUS KernelProtect_Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-
+extern PLIST_ENTRY PsLoadedModuleList;
 /**********************************************************************
  * 
  *  KernelProtect_IoControl
@@ -126,6 +126,7 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	ULONG				bytesProcessed;
 	ULONG				threadIndex;
 	ULONG				threadID;
+	ULONG				handleIndex;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
     inBufLength = irpStack->Parameters.DeviceIoControl.InputBufferLength;
     outBufLength = irpStack->Parameters.DeviceIoControl.OutputBufferLength;
@@ -141,7 +142,7 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		        memset(OutputBuffer, 0, outBufLength);
 		        Irp->IoStatus.Information = outBufLength;
 				//DbgPrint("[ring0] output length %d", outBufLength);
-				*OutputBuffer = GetProcessCount();
+				*((ULONG*)OutputBuffer) = GetProcessCount();
 				break;
 			case CMD_GET_PROCESS_BY_INDEX:
 				index = *((ULONG*)&cmd->param[0]);
@@ -181,6 +182,12 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				//DbgPrint("[ring0] processID %d", processID);
 				GetProcessString(processID, OutputBuffer);
 				break;
+			case CMD_GET_LOADED_DRIVER_LIST:
+				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
+				memset(OutputBuffer, 0, outBufLength);
+				Irp->IoStatus.Information = outBufLength;
+				*((ULONG*)OutputBuffer) = (ULONG)PsLoadedModuleList;
+				break;
 			case CMD_READ_PROCESS_MEMORY:
 				tmp = (ULONG*)&cmd->param[0];
 				processID = *tmp;
@@ -213,6 +220,25 @@ NTSTATUS KernelProtect_IoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				memset(OutputBuffer, 0, outBufLength);
 				Irp->IoStatus.Information = outBufLength;
 				GetThreadDetail(processID, threadIndex, (struct THREAD_DETAIL*)OutputBuffer);
+				break;
+
+			case CMD_GET_HANDLE_COUNT:
+				tmp = (ULONG*)&cmd->param[0];
+				processID = *tmp;
+				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
+				memset(OutputBuffer, 0, outBufLength);
+				Irp->IoStatus.Information = outBufLength;
+				*((ULONG*)OutputBuffer) = GetHandleCount(processID);
+				break;
+
+			case CMD_GET_HANDLEINFO_BY_INDEX:
+				tmp = (ULONG*)&cmd->param[0];
+				processID = *tmp;
+				handleIndex = *(++tmp);
+				OutputBuffer = (UCHAR *)Irp->AssociatedIrp.SystemBuffer;
+				memset(OutputBuffer, 0, outBufLength);
+				Irp->IoStatus.Information = outBufLength;
+				GetHandleInfo(processID, handleIndex, (HANDLE_INFO*)OutputBuffer);
 				break;
 
 			default:

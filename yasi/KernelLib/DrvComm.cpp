@@ -76,7 +76,7 @@ void UnloadDriver(HANDLE file)
 	SC_HANDLE hService;
 	SERVICE_STATUS ss;
 	DWORD error;
-	BOOL result;
+	BOOL result = FALSE;
 
 	if( file ){
 		CloseHandle(file);

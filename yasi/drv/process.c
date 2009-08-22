@@ -287,9 +287,8 @@ ULONG GetPspTerminateThreadByPointer()
 	return FALSE;
 }
 
-
+//更多解释请看 gussing.cnblogs.com
 PVOID GetPspExitThread()
-
 {
 #ifdef XP_SP3
 	char* sPtr;
@@ -480,11 +479,11 @@ void GetProcessString(ULONG id,  ULONG* pebAddress)
 	found = FALSE;
 	found = FindProcessByID(id, &EProcess);
 	if( found ){
-		//DbgPrint("[ring0] process %d found! EPROCESS is 0x%x", id, EProcess);
+		DbgPrint("[ring0] process %d found! EPROCESS is 0x%x", id, EProcess);
 		*pebAddress = *((ULONG*)(EProcess+GetPlantformDependentInfo(PEB_OFFSET)));
 		
 	}else{
-		//DbgPrint("[ring0] do not found %d", id);
+		DbgPrint("[ring0] do not found %d", id);
 		*pebAddress = 0;
 	}
 
@@ -502,7 +501,10 @@ BOOL YasiReadProcessMemory(ULONG id, PVOID BaseAddress, PVOID Buffer, ULONG size
 	if( !found ) return FALSE;
 	if( BaseAddress == NULL || size == 0 ) return FALSE;
 	mdl = MmCreateMdl(NULL, Buffer, size);
-	MmProbeAndLockPages(mdl, UserMode, IoWriteAccess);
+	if( (ULONG)Buffer < 0x80000000 )
+		MmProbeAndLockPages(mdl, UserMode, IoWriteAccess);
+	else
+		MmProbeAndLockPages(mdl, KernelMode, IoWriteAccess);
 	KeAttachProcess((PEPROCESS)EProcess);
 	SystemAddress = MmGetSystemAddressForMdl(mdl);
 	if( MmIsAddressValid(BaseAddress) && MmIsAddressValid((char*)BaseAddress+size-1) ) 
@@ -531,7 +533,10 @@ BOOL YasiWriteProcessMemory(ULONG id, PVOID BaseAddress,PVOID Buffer, ULONG size
 	if( BaseAddress == NULL || size == 0 ) return FALSE;
 
 	mdl = MmCreateMdl(NULL, Buffer, size);
-	MmProbeAndLockPages(mdl, UserMode, IoReadAccess);
+	if( (ULONG)Buffer < 0x80000000 )
+		MmProbeAndLockPages(mdl, UserMode, IoReadAccess);
+	else
+		MmProbeAndLockPages(mdl, KernelMode, IoReadAccess);
 	KeAttachProcess((PEPROCESS)EProcess);
 	SystemAddress = MmGetSystemAddressForMdl(mdl);
 	if( MmIsAddressValid(BaseAddress) && MmIsAddressValid((char*)BaseAddress+size-1) ) {

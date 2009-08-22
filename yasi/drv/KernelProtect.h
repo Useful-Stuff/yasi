@@ -44,7 +44,10 @@ enum
 	CMD_READ_PROCESS_MEMORY,
 	CMD_WRITE_PROCESS_MEMORY,
 	CMD_GET_THREAD_DETAIL,
-	CMD_KILL_THREAD
+	CMD_KILL_THREAD,
+	CMD_GET_HANDLE_COUNT,
+	CMD_GET_HANDLEINFO_BY_INDEX,
+	CMD_GET_LOADED_DRIVER_LIST
 
 };
 
@@ -84,6 +87,20 @@ struct ETHREAD_WAPPER
 #endif
 };
 
+typedef struct _HANDLE_INFO
+{
+#ifdef XP_SP3
+	ULONG canFound;
+	ULONG handle;
+	ULONG objAddress;
+	ULONG refrenced;
+	ULONG handles;
+	wchar_t typeName[1024];
+	wchar_t objName[1024];
+#else
+#endif
+} HANDLE_INFO;
+
 struct PROCESS_DETAIL
 {
 	WCHAR fullName[128];
@@ -119,6 +136,9 @@ BOOL YasiReadProcessMemory(ULONG id, PVOID lpBaseAddress, PVOID lpBuffer, ULONG 
 BOOL YasiWriteProcessMemory(ULONG id, PVOID lpBaseAddress,PVOID lpBuffer, ULONG nSize, ULONG * lpNumberOfBytesWritten);
 BOOL GetThreadDetail(ULONG pid, ULONG thread_idx, struct THREAD_DETAIL* detail);
 void KillThread(ULONG pid, ULONG tid);
+
+ULONG GetHandleCount(ULONG pid);
+void GetHandleInfo(ULONG pid, ULONG index, HANDLE_INFO* info);
 
 enum
 {

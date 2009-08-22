@@ -183,6 +183,9 @@ ntdll!_KPROCESS
 */
 #pragma  pack (1)
 
+#ifndef BYTE
+#define BYTE char
+#endif
 typedef struct _UNICODE_STRING_XP_SP3 {
 	USHORT  Length;
 	USHORT  MaximumLength;
@@ -687,5 +690,266 @@ typedef struct _ETHREAD_XP_SP3
 	char	ForwardClusterOnly;//+0x254
 	char	DisablePageFaultClustering;//+0x255;
 } ETHREAD_XP_SP3, *PETHREAD_XP_SP3;
+
+typedef struct _HANDLE_TABLE_XP_SP3 // 0x44
+{
+	ULONG TableCode; // +0x0(0x4)
+	PEPROCESS_XP_SP3 QuotaProcess; // +0x4(0x4)
+	void* UniqueProcessId; // +0x8(0x4)
+	ULONG HandleTableLock[0x4]; // +0xc(0x10)
+	LIST_ENTRY HandleTableList; // +0x1c(0x8)
+	ULONG HandleContentionEvent; // +0x24(0x4)
+	PVOID DebugInfo; // +0x28(0x4)
+	long ExtraInfoPages; // +0x2c(0x4)
+	ULONG FirstFree; // +0x30(0x4)
+	ULONG LastFree; // +0x34(0x4)
+	ULONG NextHandleNeedingPool; // +0x38(0x4)
+	long HandleCount; // +0x3c(0x4)
+	union{
+		ULONG Flags; // +0x40(0x4)
+		BYTE StrictFIFO; // +0x40(0x1)
+	}u1;
+}HANDLE_TABLE_XP_SP3, *PHANDLE_TABLE_XP_SP3;
+
+typedef struct _HANDLE_TABLE_ENTRY_XP_SP3
+{
+	union{
+		PVOID Object;
+		ULONG ObAttributes;
+		PVOID InfoTable;
+		ULONG Value;
+	}u1;
+	union{
+		struct _s1
+		{
+			union{
+				ULONG GrantedAccess;
+				struct _s2{
+					unsigned short GrantedAccessIndex;
+					unsigned short GreatorBackTraceIndex;
+				}s2;
+			}u2;
+		}s1;
+		int NextFreeTableEntry;
+	}u3;
+}HANDLE_TABLE_ENTRY_XP_SP3,*PHANDLE_TABLE_ENTRY_XP_SP3;
+
+
+typedef struct _OBJECT_HEADER_NAME_INFO_XP_SP3 // 0x10
+{
+	PVOID Directory; // +0x0(0x4)
+	UNICODE_STRING_XP_SP3 Name; // +0x4(0x8)
+	ULONG QueryReferences; // +0xc(0x4)
+}OBJECT_HEADER_NAME_INFO_XP_SP3, *POBJECT_HEADER_NAME_INFO_XP_SP3;
+
+typedef struct _OBJECT_NAME_INFORMATION_XP_SP3 // 0x8
+{
+	UNICODE_STRING_XP_SP3 Name; // +0x0(0x8)
+}OBJECT_NAME_INFORMATION_XP_SP3, *POBJECT_NAME_INFORMATION_XP_SP3;
+
+typedef struct _OBJECT_TYPE_INITIALIZER_XP_SP3 // 0x4c
+{
+	WORD Length; // +0x0(0x2)
+	BYTE UseDefaultObject; // +0x2(0x1)
+	BYTE CaseInsensitive; // +0x3(0x1)
+	ULONG InvalidAttributes; // +0x4(0x4)
+	GENERIC_MAPPING GenericMapping; // +0x8(0x10)
+	ULONG ValidAccessMask; // +0x18(0x4)
+	BYTE SecurityRequired; // +0x1c(0x1)
+	BYTE MaintainHandleCount; // +0x1d(0x1)
+	BYTE MaintainTypeList; // +0x1e(0x1)
+	BYTE useless;
+	ULONG PoolType; // +0x20(0x4)
+	ULONG DefaultPagedPoolCharge; // +0x24(0x4)
+	ULONG DefaultNonPagedPoolCharge; // +0x28(0x4)
+	void (__stdcall * DumpProcedure)(void*, PVOID); // +0x2c(0x4)
+	long (__stdcall * OpenProcedure)(ULONG , PEPROCESS_XP_SP3, void*, ULONG, ULONG); // +0x30(0x4)
+	void (__stdcall * CloseProcedure)(PEPROCESS_XP_SP3, void*, ULONG, ULONG, ULONG); // +0x34(0x4)
+	void (__stdcall * DeleteProcedure)(void*); // +0x38(0x4)
+	long (__stdcall * ParseProcedure)(void*, void*, struct _ACCESS_STATE*, char, ULONG, UNICODE_STRING_XP_SP3*, UNICODE_STRING_XP_SP3*, void*, PVOID, void**); // +0x3c(0x4)
+	long (__stdcall * SecurityProcedure)(void*, enum _SECURITY_OPERATION_CODE, ULONG*, void*, ULONG*, void**, ULONG, PVOID, char); // +0x40(0x4)
+	long (__stdcall * QueryNameProcedure)(void*, BYTE, POBJECT_NAME_INFORMATION_XP_SP3 , ULONG, ULONG*); // +0x44(0x4)
+	BYTE (__stdcall * OkayToCloseProcedure)(PEPROCESS_XP_SP3, void*, void*, char); // +0x48(0x4)
+}OBJECT_TYPE_INITIALIZER_XP_SP3, *POBJECT_TYPE_INITIALIZER_XP_SP3;
+
+
+typedef struct _OBJECT_TYPE_XP_SP3 // 0x190
+{
+	ULONG Mutex[14]; // +0x0(0x38)
+	LIST_ENTRY TypeList; // +0x38(0x8)
+	UNICODE_STRING_XP_SP3 Name; // +0x40(0x8)
+	void* DefaultObject; // +0x48(0x4)
+	ULONG Index; // +0x4c(0x4)
+	ULONG TotalNumberOfObjects; // +0x50(0x4)
+	ULONG TotalNumberOfHandles; // +0x54(0x4)
+	ULONG HighWaterNumberOfObjects; // +0x58(0x4)
+	ULONG HighWaterNumberOfHandles; // +0x5c(0x4)
+	OBJECT_TYPE_INITIALIZER_XP_SP3 TypeInfo; // +0x60(0x4c)
+	ULONG Key; // +0xac(0x4)
+	ULONG ObjectLocks[14][4]; // +0xb0(0xe0)
+
+}OBJECT_TYPE_XP_SP3,*POBJECT_TYPE_XP_SP3;
+
+typedef struct _OBJECT_CREATE_INFORMATION_XP_SP3 // 0x30
+{
+	ULONG Attributes; // +0x0(0x4)
+	void* RootDirectory; // +0x4(0x4)
+	void* ParseContext; // +0x8(0x4)
+	char ProbeMode; // +0xc(0x1)
+	char useless[3];
+	ULONG PagedPoolCharge; // +0x10(0x4)
+	ULONG NonPagedPoolCharge; // +0x14(0x4)
+	ULONG SecurityDescriptorCharge; // +0x18(0x4)
+	void* SecurityDescriptor; // +0x1c(0x4)
+	struct _SECURITY_QUALITY_OF_SERVICE* SecurityQos; // +0x20(0x4)
+	struct _SECURITY_QUALITY_OF_SERVICE SecurityQualityOfService; // +0x24(0xc)
+}OBJECT_CREATE_INFORMATION_XP_SP3, *POBJECT_CREATE_INFORMATION_XP_SP3;
+
+typedef struct _OBJECT_HEADER_XP_SP3 // 0x20
+{
+	long PointerCount; // +0x0(0x4)
+	long HandleCount; // +0x4(0x4)
+	POBJECT_TYPE_XP_SP3 Type; // +0x8(0x4)
+	BYTE NameInfoOffset; // +0xc(0x1)
+	BYTE HandleInfoOffset; // +0xd(0x1)
+	BYTE QuotaInfoOffset; // +0xe(0x1)
+	BYTE Flags; // +0xf(0x1)
+	union
+	{
+		POBJECT_CREATE_INFORMATION_XP_SP3 ObjectCreateInfo; // +0x10(0x4)
+		void* QuotaBlockCharged; // +0x10(0x4)
+	}u1;
+	void* SecurityDescriptor; // +0x14(0x4)
+	char Body; // +0x18(0x8)
+}OBJECT_HEADER_XP_SP3,*POBJECT_HEADER_XP_SP3;
+
+typedef struct _KEVENT_XP_SP3 // 0x10
+{
+	DISPATCHER_HEADER_XP_SP3 Header; // +0x0(0x10)
+}KEVENT_XP_SP3, *PKEVENT_XP_SP3;
+
+typedef struct _FILE_OBJECT_XP_SP3 // 0x70
+{
+	short Type; // +0x0(0x2)
+	short Size; // +0x2(0x2)
+	PVOID DeviceObject; // +0x4(0x4)
+	PVOID Vpb; // +0x8(0x4)
+	void* FsContext; // +0xc(0x4)
+	void* FsContext2; // +0x10(0x4)
+	PVOID SectionObjectPointer; // +0x14(0x4)
+	void* PrivateCacheMap; // +0x18(0x4)
+	long FinalStatus; // +0x1c(0x4)
+	PVOID RelatedFileObject; // +0x20(0x4)
+	BYTE LockOperation; // +0x24(0x1)
+	BYTE DeletePending; // +0x25(0x1)
+	BYTE ReadAccess; // +0x26(0x1)
+	BYTE WriteAccess; // +0x27(0x1)
+	BYTE DeleteAccess; // +0x28(0x1)
+	BYTE SharedRead; // +0x29(0x1)
+	BYTE SharedWrite; // +0x2a(0x1)
+	BYTE SharedDelete; // +0x2b(0x1)
+	ULONG Flags; // +0x2c(0x4)
+	UNICODE_STRING_XP_SP3 FileName; // +0x30(0x8)
+	LARGE_INTEGER CurrentByteOffset; // +0x38(0x8)
+	ULONG Waiters; // +0x40(0x4)
+	ULONG Busy; // +0x44(0x4)
+	PVOID LastLock; // +0x48(0x4)
+	KEVENT_XP_SP3 Lock; // +0x4c(0x10)
+	KEVENT_XP_SP3 Event; // +0x5c(0x10)
+	PVOID CompletionContext; // +0x6c(0x4)
+}FILE_OBJECT_XP_SP3, *PFILE_OBJECT_XP_SP3;
+
+typedef struct _CM_KEY_HASH_XP_SP3 // 0x10
+{
+	ULONG ConvKey; // +0x0(0x4)
+	PVOID NextHash; // +0x4(0x4)
+	PVOID KeyHive; // +0x8(0x4)
+	ULONG KeyCell; // +0xc(0x4)
+}CM_KEY_HASH_XP_SP3, *PCM_KEY_HASH_XP_SP3;
+
+typedef struct _CM_NAME_HASH_XP_SP3 // 0xc
+{
+	ULONG ConvKey; // +0x0(0x4)
+	PVOID NextHash; // +0x4(0x4)
+	WORD NameLength; // +0x8(0x2)
+	WORD Name[0x1]; // +0xa(0x2)
+}CM_NAME_HASH_XP_SP3,*PCM_NAME_HASH_XP_SP3;
+
+typedef struct _CACHED_CHILD_LIST_XP_SP3 // 0x8
+{
+	ULONG Count; // +0x0(0x4)
+	union{
+		ULONG ValueList; // +0x4(0x4)
+		PVOID RealKcb; // +0x4(0x4)
+	}u1;
+}CACHED_CHILD_LIST_XP_SP3, *PCACHED_CHILD_LIST_XP_SP3;
+
+typedef struct _CM_NAME_CONTROL_BLOCK_XP_SP3 // 0x10
+{
+	BYTE Compressed; // +0x0(0x1)
+	BYTE useless;
+	WORD RefCount; // +0x2(0x2)
+	union {
+		PCM_NAME_HASH_XP_SP3 NameHash; // +0x4(0xc)
+		ULONG ConvKey; // +0x4(0x4)
+	}u1;
+	PVOID NextHash; // +0x8(0x4)
+	WORD NameLength; // +0xc(0x2)
+	WORD Name[0x1]; // +0xe(0x2)
+}CM_NAME_CONTROL_BLOCK_XP_SP3, *PCM_NAME_CONTROL_BLOCK_XP_SP3;
+
+typedef struct _CM_KEY_CONTROL_BLOCK_XP_SP3// 0x50
+{
+	ULONG RefCount; // +0x0(0x4)
+	union{
+		ULONG ExtFlags; // +0x4(0x4)
+		ULONG PrivateAlloc; // +0x4(0x4)
+		ULONG Delete; // +0x4(0x4)
+		ULONG DelayedCloseIndex; // +0x4(0x4)
+		ULONG TotalLevels; // +0x4(0x4)
+	}u1;
+	union{
+		PCM_KEY_HASH_XP_SP3 KeyHash; // +0x8(0x10)
+		ULONG ConvKey; // +0x8(0x4)
+	}u2;
+	PVOID NextHash; // +0xc(0x4)
+	PVOID KeyHive; // +0x10(0x4)
+	ULONG KeyCell; // +0x14(0x4)
+	PVOID ParentKcb; // +0x18(0x4)
+	PCM_NAME_CONTROL_BLOCK_XP_SP3 NameBlock; // +0x1c(0x4)
+	PVOID CachedSecurity; // +0x20(0x4)
+	CACHED_CHILD_LIST_XP_SP3 ValueCache; // +0x24(0x8)
+	union{
+		PVOID IndexHint; // +0x2c(0x4)
+		ULONG HashKey; // +0x2c(0x4)
+		ULONG SubKeyCount; // +0x2c(0x4)
+	}u3;
+	union{
+		LIST_ENTRY KeyBodyListHead; // +0x30(0x8)
+		LIST_ENTRY FreeListEntry; // +0x30(0x8)
+	}u4;
+	LARGE_INTEGER KcbLastWriteTime; // +0x38(0x8)
+	WORD KcbMaxNameLen; // +0x40(0x2)
+	WORD KcbMaxValueNameLen; // +0x42(0x2)
+	ULONG KcbMaxValueDataLen; // +0x44(0x4)
+	union{
+		ULONG KcbUserFlags; // +0x48(0x4)
+		ULONG KcbVirtControlFlags; // +0x48(0x4)
+		ULONG KcbDebug; // +0x48(0x4)
+		ULONG Flags; // +0x48(0x4)
+	}u5;
+}CM_KEY_CONTROL_BLOCK_XP_SP3, *PCM_KEY_CONTROL_BLOCK_XP_SP3;
+
+typedef struct _CM_KEY_BODY_XP_SP3 // 0x44
+{
+	ULONG Type; // +0x0(0x4)
+	PCM_KEY_CONTROL_BLOCK_XP_SP3 KeyControlBlock; // +0x4(0x4)
+	PVOID NotifyBlock; // +0x8(0x4)
+	void* ProcessID; // +0xc(0x4)
+	ULONG Callers; // +0x10(0x4)
+	void* CallerAddress[0xa]; // +0x14(0x28)
+	LIST_ENTRY KeyBodyList; // +0x3c(0x8)
+}CM_KEY_BODY_XP_SP3,*PCM_KEY_BODY_XP_SP3;
+
 
 #pragma  pack ()

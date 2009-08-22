@@ -37,6 +37,38 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
  *    are a driver object and the registry path.
  *
  **********************************************************************/
+PLIST_ENTRY PsLoadedModuleList;
+
+PLIST_ENTRY FindPsLoadedModuleList (IN PDRIVER_OBJECT DriverObject)
+{
+	PLDR_DATA_TABLE_ENTRY_XP_SP3 pModuleCurrent = NULL;
+	PLDR_DATA_TABLE_ENTRY_XP_SP3 PsLoadedModuleList = NULL;
+
+	if (DriverObject == NULL)
+		return 0;
+
+	pModuleCurrent = *((PLDR_DATA_TABLE_ENTRY_XP_SP3*)(DriverObject->DriverSection));
+	if (pModuleCurrent == NULL)
+		return 0;
+
+	PsLoadedModuleList = pModuleCurrent;
+
+	while ((PLDR_DATA_TABLE_ENTRY_XP_SP3)pModuleCurrent->InLoadOrderLinks.Flink != PsLoadedModuleList)
+	{
+		if (((pModuleCurrent->SizeOfImage == 0x00000000)
+			&& (pModuleCurrent->FullDllName.Length == 0))
+			|| (pModuleCurrent->FullDllName.Buffer == NULL))
+		{
+			return (PLIST_ENTRY) pModuleCurrent;
+		}
+
+		pModuleCurrent = (PLDR_DATA_TABLE_ENTRY_XP_SP3)pModuleCurrent->InLoadOrderLinks.Flink;
+	}
+
+	return NULL;
+}
+
+
 NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPath)
 {
 	//RTL_OSVERSIONINFOW versionInfo;
@@ -45,7 +77,9 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
     PDEVICE_OBJECT pDeviceObject = NULL;
     UNICODE_STRING usDriverName, usDosDeviceName;
 
-    DbgPrint("DriverEntry Called \r\n");
+    
+	PsLoadedModuleList = FindPsLoadedModuleList(pDriverObject);
+	DbgPrint("DriverEntry Called PsLoadedModuleList 0x%x\r\n",PsLoadedModuleList);
 
     RtlInitUnicodeString(&usDriverName, L"\\Device\\KernelProtect");
     RtlInitUnicodeString(&usDosDeviceName, L"\\DosDevices\\KernelProtect"); 

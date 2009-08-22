@@ -79,6 +79,21 @@ ULONG yasi_get_peb_address(YASI_HANDLE h, ULONG processID)
 	return pebAddress;
 }
 
+ULONG yasi_get_loaded_module_list(YASI_HANDLE h)
+{
+	DWORD dwReturn;
+	ULONG total_len = sizeof(ULONG) + sizeof(ULONG);
+	CMD_RECORD* cmd = (CMD_RECORD*)malloc(total_len);
+	memset(cmd, 0, total_len);
+	cmd->op = CMD_GET_LOADED_DRIVER_LIST;
+	cmd->total_len = total_len;
+	ULONG pebAddress = 0;
+	DeviceIoControl(h, IOCTL_CMD_READ, cmd, total_len, &pebAddress, sizeof(ULONG), &dwReturn, NULL);
+	free(cmd);
+
+	return pebAddress;
+}
+
 ULONG yasi_get_base_address(YASI_HANDLE h, ULONG processID)
 {
 	ULONG pebAddress = yasi_get_peb_address(h, processID);
@@ -106,6 +121,8 @@ void yasi_get_process_info(YASI_HANDLE h, ULONG processID, UINT which, wchar_t* 
 		return;
 
 	ULONG pebAddress = yasi_get_peb_address(h, processID);
+	if( pebAddress == 0 )
+		return;
 	//HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
 	PVOID strPtr = GetStringPoint(h, processID, pebAddress, which);
 	ReadUnicodeString(h, processID, (ULONG)strPtr, str);
@@ -133,14 +150,20 @@ ULONG yasi_get_module_count(YASI_HANDLE h, ULONG processID)
 {
 	DWORD dwReturn;
 	//HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
-	ULONG pebAddress = yasi_get_peb_address(h, processID);
-	ULONG ldrAddress = pebAddress + GetPlantformDependentInfo(Ldr_OFFSET);
-	ULONG ldrDataAddress = 0;
-	yasi_read_process_memory(h, processID, (PVOID)ldrAddress, &ldrDataAddress, sizeof(ULONG), &dwReturn);
-	_PEB_LDR_DATA ldrData = {0};
-	yasi_read_process_memory(h, processID, (PVOID)ldrDataAddress, &ldrData, sizeof(ldrData), &dwReturn);
+	LIST_ENTRY* first = NULL;
 	ULONG count = 0;
-	LIST_ENTRY* first = ldrData.InLoadOrderModuleList.Flink;
+	ULONG pebAddress = yasi_get_peb_address(h, processID);
+	if( pebAddress != 0 ){
+		ULONG ldrAddress = pebAddress + GetPlantformDependentInfo(Ldr_OFFSET);
+		ULONG ldrDataAddress = 0;
+		yasi_read_process_memory(h, processID, (PVOID)ldrAddress, &ldrDataAddress, sizeof(ULONG), &dwReturn);
+		_PEB_LDR_DATA ldrData = {0};
+		yasi_read_process_memory(h, processID, (PVOID)ldrDataAddress, &ldrData, sizeof(ldrData), &dwReturn);
+
+		first = ldrData.InLoadOrderModuleList.Flink;
+	}else{
+		first = (LIST_ENTRY*)yasi_get_loaded_module_list(h);
+	}
 	if( first == NULL ) return 0;
 
 	LIST_ENTRY first_entry = {0};
@@ -162,14 +185,19 @@ void yasi_get_module_info(YASI_HANDLE h, ULONG processID, ULONG index, LDR_DATA_
 {
 	DWORD dwReturn;
 	//HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
-	ULONG pebAddress = yasi_get_peb_address(h, processID);
-	ULONG ldrAddress = pebAddress + GetPlantformDependentInfo(Ldr_OFFSET);
-	ULONG ldrDataAddress = 0;
-	yasi_read_process_memory(h, processID, (PVOID)ldrAddress, &ldrDataAddress, sizeof(ULONG), &dwReturn);
-	_PEB_LDR_DATA ldrData = {0};
-	yasi_read_process_memory(h, processID, (PVOID)ldrDataAddress, &ldrData, sizeof(ldrData), &dwReturn);
+	LIST_ENTRY* first = NULL;
 	ULONG count = 0;
-	LIST_ENTRY* first = ldrData.InLoadOrderModuleList.Flink;
+	ULONG pebAddress = yasi_get_peb_address(h, processID);
+	if( pebAddress != 0 ){
+		ULONG ldrAddress = pebAddress + GetPlantformDependentInfo(Ldr_OFFSET);
+		ULONG ldrDataAddress = 0;
+		yasi_read_process_memory(h, processID, (PVOID)ldrAddress, &ldrDataAddress, sizeof(ULONG), &dwReturn);
+		_PEB_LDR_DATA ldrData = {0};
+		yasi_read_process_memory(h, processID, (PVOID)ldrDataAddress, &ldrData, sizeof(ldrData), &dwReturn);
+		first = ldrData.InLoadOrderModuleList.Flink;
+	}else{
+		first = (LIST_ENTRY*)yasi_get_loaded_module_list(h);
+	}
 	if( first == NULL ) return;
 
 	LIST_ENTRY first_entry = {0};
@@ -632,6 +660,44 @@ void yasi_kill_thread(YASI_HANDLE h, ULONG processID, ULONG threadID)
 	*tmp = (ULONG)threadID;
 
 	BOOL ret = DeviceIoControl(h, IOCTL_CMD_READ, cmd, total_len, NULL, 0, &dwReturn, NULL);
+
+	free(cmd);
+
+	return;
+}
+
+ULONG yasi_get_handle_count(YASI_HANDLE h, ULONG processID)
+{
+	DWORD dwReturn;
+	ULONG total_len = sizeof(ULONG) + sizeof(ULONG) + sizeof(ULONG);
+	CMD_RECORD* cmd = (CMD_RECORD*)malloc(total_len);
+	memset(cmd, 0, total_len);
+	cmd->op = CMD_GET_HANDLE_COUNT;
+	cmd->total_len = total_len;
+	ULONG* tmp = (ULONG*)(&(cmd->param[0]));
+	*tmp = (ULONG)processID;
+	ULONG count = 0;
+	BOOL ret = DeviceIoControl(h, IOCTL_CMD_READ, cmd, total_len, &count, 4, &dwReturn, NULL);
+
+	free(cmd);
+
+	return count;
+}
+
+void yasi_get_handle_info(YASI_HANDLE h , ULONG processID, ULONG index, HANDLE_INFO* info )
+{
+	DWORD dwReturn;
+	ULONG total_len = sizeof(ULONG) + sizeof(ULONG) + sizeof(ULONG)*2;
+	CMD_RECORD* cmd = (CMD_RECORD*)malloc(total_len);
+	memset(cmd, 0, total_len);
+	cmd->op = CMD_GET_HANDLEINFO_BY_INDEX;
+	cmd->total_len = total_len;
+	ULONG* tmp = (ULONG*)(&(cmd->param[0]));
+	*tmp = (ULONG)processID;
+	tmp++;
+	*tmp = (ULONG)index;
+
+	BOOL ret = DeviceIoControl(h, IOCTL_CMD_READ, cmd, total_len, info, sizeof(HANDLE_INFO), &dwReturn, NULL);
 
 	free(cmd);
 

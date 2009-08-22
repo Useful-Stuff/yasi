@@ -5,5 +5,5 @@ TARGETLIBS=C:\WinDDK\7078.0.0\lib\wxp\i386\wdm.lib \
 	c:\WinDDK\7078.0.0\lib\wxp\i386\ntoskrnl.lib
 INCLUDES=C:\WinDDK\7078.0.0\inc\ddk \
 	C:\WinDDK\7078.0.0\inc
-SOURCES= entry.c functions.c process.c
+SOURCES= entry.c functions.c process.c HandleInfo.c QueryObject.c
 

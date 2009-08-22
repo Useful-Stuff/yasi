@@ -5,6 +5,7 @@
 #include "yaProcessExplorer.h"
 #include "ProcessDetail.h"
 #include "ThreadDetail.h"
+#include "HandleDetail.h"
 
 
 // CProcessDetail dialog
@@ -145,6 +146,7 @@ BEGIN_MESSAGE_MAP(CProcessDetail, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_LOAD, &CProcessDetail::OnBnClickedButtonLoad)
 	ON_CBN_SELCHANGE(IDC_COMBO_IORE, &CProcessDetail::OnCbnSelchangeComboIore)
 	ON_BN_CLICKED(IDC_BUTTON_VIEW_THREAD, &CProcessDetail::OnBnClickedButtonViewThread)
+	ON_BN_CLICKED(IDC_BUTTON_HANDLES, &CProcessDetail::OnBnClickedButtonHandles)
 END_MESSAGE_MAP()
 
 
@@ -446,6 +448,15 @@ void CProcessDetail::OnBnClickedButtonViewThread()
 {
 	KillTimer(1);
 	CThreadDetail detail(this, core, pid);
+	detail.DoModal();
+	SetTimer(1, 3000, NULL);
+}
+
+void CProcessDetail::OnBnClickedButtonHandles()
+{
+	KillTimer(1);
+
+	CHandleDetail detail(this, core, pid);
 	detail.DoModal();
 	SetTimer(1, 3000, NULL);
 }

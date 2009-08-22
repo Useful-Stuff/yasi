@@ -36,7 +36,10 @@ enum
 	CMD_READ_PROCESS_MEMORY,
 	CMD_WRITE_PROCESS_MEMORY,
 	CMD_GET_THREAD_DETAIL,
-	CMD_KILL_THREAD
+	CMD_KILL_THREAD,
+	CMD_GET_HANDLE_COUNT,
+	CMD_GET_HANDLEINFO_BY_INDEX,
+	CMD_GET_LOADED_DRIVER_LIST
 
 };
 
@@ -70,6 +73,20 @@ struct PROCESS_DETAIL
 #endif
 };
 
+typedef struct _HANDLE_INFO
+{
+#ifdef XP_SP3
+	ULONG canFound;
+	ULONG handle;
+	ULONG objAddress;
+	ULONG refrenced;
+	ULONG handles;
+	wchar_t typeName[1024];
+	wchar_t objName[1024];
+#else
+#endif
+} HANDLE_INFO;
+
 struct THREAD_DETAIL
 {
 #ifdef XP_SP3
@@ -91,6 +108,8 @@ DllExport void yasi_get_process_detail(YASI_HANDLE h, ULONG processID, PROCESS_D
 DllExport void yasi_kill_process(YASI_HANDLE h, ULONG processID);
 
 DllExport ULONG yasi_get_peb_address(YASI_HANDLE h, ULONG processID);
+
+DllExport ULONG yasi_get_loaded_module_list(YASI_HANDLE h);
 
 DllExport ULONG yasi_get_base_address(YASI_HANDLE h, ULONG processID);
 
@@ -125,6 +144,10 @@ DllExport ULONG yasi_get_thread_count(YASI_HANDLE h, ULONG processID);
 DllExport void yasi_get_thread_detail(YASI_HANDLE h, ULONG processID, ULONG threadIndex, THREAD_DETAIL* detail);
 DllExport void yasi_export_all_func(YASI_HANDLE h , ULONG processID, char* fileName);
 DllExport void yasi_kill_thread(YASI_HANDLE h, ULONG processID, ULONG threadID);
+
+
+DllExport ULONG yasi_get_handle_count(YASI_HANDLE h, ULONG processID);
+DllExport void yasi_get_handle_info(YASI_HANDLE h , ULONG processID, ULONG index, HANDLE_INFO* info );
 #ifdef __cplusplus
 };
 
