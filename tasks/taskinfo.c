@@ -241,3 +241,12 @@ void remove_task(task_node* task)
     RemoveEntryList(&(task->node));
     LeaveCriticalSection(&(task_list_lock));
 }
+
+taskitem* create_taskitem(u32 msg, u8* buf, u32 length)
+{
+    taskitem* item = (taskitem*)malloc(sizeof(taskitem));
+    item->buf = buf;
+    item->msg = msg;
+    item->length = length;
+    return item;
+}

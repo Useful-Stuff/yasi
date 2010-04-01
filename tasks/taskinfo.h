@@ -46,6 +46,8 @@ event_node* fetch_event_tail(task_node* task);
 
 void insert_task(task_node* task);
 void remove_task(task_node* task);
+task_api taskitem* create_taskitem(u32 msg, u8* buf, u32 length);
+
 
 
 VOID InitializeListHead(  __out PLIST_ENTRY ListHead );

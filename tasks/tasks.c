@@ -84,26 +84,21 @@ task_api bool destroy_task_queue(u32 qid)
     return true;
 }
 
-task_api taskitem* create_taskitem(u32 msg, u8* buf, u32 length)
-{
-    taskitem* item = (taskitem*)malloc(sizeof(taskitem));
-    item->buf = buf;
-    item->msg = msg;
-    item->length = length;
-    return item;
-}
 
-task_api bool post_event(u32 qid, taskitem* item)
+
+task_api bool post_event(u32 qid, u32 msg, u8* buf, u32 length)
 {
     task_node* node = (task_node*)qid;
+    taskitem* item = create_taskitem(msg, buf, length);
     event_node* event = create_event_node(item);
     insert_event_tail(node, event);
     return true;
 }
 
-task_api bool send_event(u32 qid, taskitem* item)
+task_api bool send_event(u32 qid, u32 msg, u8* buf, u32 length)
 {
     task_node* node = (task_node*)qid;
+    taskitem* item = create_taskitem(msg, buf, length);
     event_node* event = create_event_node(item);
     if( node->thread_id == event->thread_id ){
         if( node->callback ){

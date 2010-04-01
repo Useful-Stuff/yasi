@@ -61,9 +61,8 @@ extern "C" {
     task_api void uninit_lib();
     task_api u32 create_task_queue(task_notify_routine func);
     task_api bool destroy_task_queue(u32 qid);
-    task_api taskitem* create_taskitem(u32 msg, u8* buf, u32 length);
-    task_api bool post_event(u32 qid, taskitem* event);
-    task_api bool send_event(u32 qid, taskitem* event);
+    task_api bool post_event(u32 qid, u32 msg, u8* buf, u32 length);
+    task_api bool send_event(u32 qid, u32 msg, u8* buf, u32 length);
 
 #ifdef __cplusplus
 }

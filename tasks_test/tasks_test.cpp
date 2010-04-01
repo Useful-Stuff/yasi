@@ -31,8 +31,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
     for( int index = 0 ; index < 1000; index++ ){
         printf("[send] send %04d thread %04d\n", index, GetCurrentThreadId());
-        taskitem* item = create_taskitem(0, NULL, 0);
-        send_event(qid, item);
+        send_event(qid, 0, NULL, 0);
     }
 
     system("pause");
