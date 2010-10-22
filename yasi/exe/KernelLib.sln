@@ -15,6 +15,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibTest", "KernelPortect.vc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KernelLib", "..\KernelLib\KernelLib.vcproj", "{60BAFCAE-C993-4373-857B-D18941277678}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DbgDrv", "..\DbgDrv\DbgDrv.vcproj", "{120141C5-2532-4A49-859F-32F8FE067DE0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LogView", "..\LogView\LogView.vcproj", "{CAFEE685-8292-4C7E-B0F4-2E7099DE3B24}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -37,6 +41,14 @@ Global
 		{60BAFCAE-C993-4373-857B-D18941277678}.Debug|Win32.Build.0 = Debug|Win32
 		{60BAFCAE-C993-4373-857B-D18941277678}.Release|Win32.ActiveCfg = Release|Win32
 		{60BAFCAE-C993-4373-857B-D18941277678}.Release|Win32.Build.0 = Release|Win32
+		{120141C5-2532-4A49-859F-32F8FE067DE0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{120141C5-2532-4A49-859F-32F8FE067DE0}.Debug|Win32.Build.0 = Debug|Win32
+		{120141C5-2532-4A49-859F-32F8FE067DE0}.Release|Win32.ActiveCfg = Release|Win32
+		{120141C5-2532-4A49-859F-32F8FE067DE0}.Release|Win32.Build.0 = Release|Win32
+		{CAFEE685-8292-4C7E-B0F4-2E7099DE3B24}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CAFEE685-8292-4C7E-B0F4-2E7099DE3B24}.Debug|Win32.Build.0 = Debug|Win32
+		{CAFEE685-8292-4C7E-B0F4-2E7099DE3B24}.Release|Win32.ActiveCfg = Release|Win32
+		{CAFEE685-8292-4C7E-B0F4-2E7099DE3B24}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -378,55 +378,24 @@ void GetHandleInfo(ULONG pid, ULONG index, HANDLE_INFO* info)
 				i++;
 			}
 
+			//第一轮
 			isFetched = FALSE;
 			if( strcmp(tmpTypeName, "File") == 0 )
 			{
 				QueryFileName(index*4, (PVOID)&objHeader->Body, info->objName);
-				isFetched = TRUE;
+				if( info->objName[0] != 0 )
+					isFetched = TRUE;
 			}
 			else if( strcmp(tmpTypeName, "Key") == 0 )
 			{
 				FindProcessByID(pid, &EProcess);
-				DbgPrint("[ring0] EProcess 0x%x",EProcess);
+				//DbgPrint("[ring0] EProcess 0x%x",EProcess);
 				QueryKeyName(index*4,EProcess,(PVOID)&objHeader->Body, info->objName);
-				isFetched = TRUE;
+				if( info->objName[0] != 0 )
+					isFetched = TRUE;
 			}
-			//else if( strcmp(tmpTypeName, "Event") && objHeader->Type->TypeInfo.QueryNameProcedure != NULL )
-			//{
-			//	//ObjNameInfo.Name.Buffer = info->objName;
-			//	//ObjNameInfo.Name.MaximumLength = 1024;
-			//	ObjNameInfo = (POBJECT_NAME_INFORMATION_XP_SP3)ExAllocatePoolWithTag(PagedPool, 2048, 1001);
-			//	if( NameInfo == NULL ){
-			//		secondParam = FALSE;
-			//	}else if( NameInfo->Name.Length == 0 ){
-			//		secondParam = FALSE;
-			//	}else{
-			//		secondParam = TRUE;
-			//	}
-			//	__try{
-			//		(*objHeader->Type->TypeInfo.QueryNameProcedure)(
-			//			(PVOID)&objHeader->Body,
-			//			secondParam,
-			//			ObjNameInfo,
-			//			2048,
-			//			&dwReturn
-			//			);
-			//	}__except(EXCEPTION_EXECUTE_HANDLER){
-			//		memset(info->objName, 0, 1024*sizeof(wchar_t));
-			//	}
-			//	if( ObjNameInfo->Name.Length > 1024 )
-			//		strLen = 1022;
-			//	else
-			//		strLen = ObjNameInfo->Name.Length;
-			//	//memset(info->objName, 0, 1024*sizeof(wchar_t));
-			//	if( MmIsAddressValid(ObjNameInfo->Name.Buffer) )
-			//		memcpy(info->objName, ObjNameInfo->Name.Buffer, strLen );
-			//	ExFreePool(ObjNameInfo);
 
-
-
-			//}
-
+			//第二轮
 			if( isFetched )
 			{
 
@@ -444,10 +413,51 @@ void GetHandleInfo(ULONG pid, ULONG index, HANDLE_INFO* info)
 					else
 						strLen = NameInfo->Name.Length;
 					//memset(info->objName, 0, 1024*sizeof(wchar_t));
-					if( MmIsAddressValid(NameInfo->Name.Buffer) )
+					if( MmIsAddressValid(NameInfo->Name.Buffer) ){
 						memcpy(info->objName, NameInfo->Name.Buffer, strLen );
+						isFetched = TRUE;
+					}
 				}
 			}
+
+			//第三轮
+			if( !isFetched && objHeader->Type->TypeInfo.QueryNameProcedure != NULL )
+			{
+				//ObjNameInfo.Name.Buffer = info->objName;
+				//ObjNameInfo.Name.MaximumLength = 1024;
+				ObjNameInfo = (POBJECT_NAME_INFORMATION_XP_SP3)ExAllocatePoolWithTag(PagedPool, 2048, 1001);
+				if( NameInfo == NULL ){
+					secondParam = FALSE;
+				}else if( NameInfo->Name.Length == 0 ){
+					secondParam = FALSE;
+				}else{
+					secondParam = TRUE;
+				}
+				__try{
+					(*objHeader->Type->TypeInfo.QueryNameProcedure)(
+						(PVOID)&objHeader->Body,
+						secondParam,
+						ObjNameInfo,
+						2048,
+						&dwReturn
+						);
+				}__except(EXCEPTION_EXECUTE_HANDLER){
+					memset(info->objName, 0, 1024*sizeof(wchar_t));
+				}
+				if( ObjNameInfo->Name.Length > 1024 )
+					strLen = 1022;
+				else
+					strLen = ObjNameInfo->Name.Length;
+				//memset(info->objName, 0, 1024*sizeof(wchar_t));
+				if( MmIsAddressValid(ObjNameInfo->Name.Buffer) )
+					memcpy(info->objName, ObjNameInfo->Name.Buffer, strLen );
+				ExFreePool(ObjNameInfo);
+
+
+
+			}
+
+
 			
 		}
 	}__except(EXCEPTION_EXECUTE_HANDLER){

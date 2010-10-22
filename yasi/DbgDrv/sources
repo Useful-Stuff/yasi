@@ -1,0 +1,9 @@
+TARGETNAME=dbgdrv
+TARGETPATH=../
+TARGETTYPE=DRIVER
+TARGETLIBS=E:\WinDDK\7078.0.0\lib\win7\i386\wdm.lib \
+	E:\WinDDK\7078.0.0\lib\win7\i386\ntoskrnl.lib
+INCLUDES=E:\WinDDK\7078.0.0\inc\ddk \
+	E:\WinDDK\7078.0.0\inc
+SOURCES= entry.c
+
