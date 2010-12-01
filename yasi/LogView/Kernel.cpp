@@ -160,6 +160,7 @@ DWORD WINAPI KernelCaptureThread(void* context)
         info->buffer = (char*)malloc(info->length);
         memcpy(info->buffer, msg, info->length);
         PostThreadMessage(g_main_thread, WM_STRING_READ, NULL, (LPARAM)info);
+        memset(buf, 0, sizeof(buf));
     }
 
 
